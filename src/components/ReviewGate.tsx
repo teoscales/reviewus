@@ -161,7 +161,7 @@ export function ReviewGate({
               type="text"
               inputMode="email"
               autoComplete="off"
-              placeholder="So the business can follow up"
+              placeholder="Optional"
               className="mt-2 w-full rounded-lg border border-[#dadce0] bg-white px-3.5 py-3 text-[16px] text-[#202124] outline-none placeholder:text-[#80868b] focus:border-[#1a73e8] focus:shadow-[inset_0_0_0_1px_#1a73e8]"
             />
           </label>
