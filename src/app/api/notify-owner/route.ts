@@ -11,9 +11,6 @@ type NotifyBody = {
 export async function POST(request: Request) {
   const key = process.env.RESEND_API_KEY;
   const to = process.env.OWNER_EMAIL ?? "";
-  if (!key) {
-    return NextResponse.json({ error: "Missing RESEND_API_KEY" }, { status: 500 });
-  }
   if (!to) {
     return NextResponse.json({ error: "Missing OWNER_EMAIL" }, { status: 500 });
   }
@@ -42,29 +39,53 @@ export async function POST(request: Request) {
 
   const from = process.env.RESEND_FROM_EMAIL || "ReviewUs <beth.t@example.com>";
   const stars = "★".repeat(rating) + "☆".repeat(5 - rating);
-  const resend = new Resend(key);
-  const { error } = await resend.emails.send({
-    from,
-    to,
-    subject: `${rating}/5 review for ${slug}`,
-    text: [
-      `New private review`,
-      `Business: ${slug}`,
-      `Rating: ${rating}/5 ${stars}`,
-      `Comment: ${comment}`,
-      `Contact: ${contact || "(none)"}`,
-    ].join("\n"),
-    html: `
-      <p><strong>New private review</strong></p>
-      <p>Business: ${escapeHtml(slug)}<br />
-      Rating: ${rating}/5 ${stars}<br />
-      Contact: ${escapeHtml(contact || "(none)")}</p>
-      <p>${escapeHtml(comment)}</p>
-    `,
-  });
+  const text = [
+    `New private review`,
+    `Business: ${slug}`,
+    `Rating: ${rating}/5 ${stars}`,
+    `Comment: ${comment}`,
+    `Contact: ${contact || "(none)"}`,
+  ].join("\n");
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 502 });
+  if (key) {
+    const resend = new Resend(key);
+    const { error } = await resend.emails.send({
+      from,
+      to,
+      subject: `${rating}/5 review for ${slug}`,
+      text,
+      html: `
+        <p><strong>New private review</strong></p>
+        <p>Business: ${escapeHtml(slug)}<br />
+        Rating: ${rating}/5 ${stars}<br />
+        Contact: ${escapeHtml(contact || "(none)")}</p>
+        <p>${escapeHtml(comment)}</p>
+      `,
+    });
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 502 });
+    }
+    return NextResponse.json({ ok: true });
+  }
+
+  const mailed = await fetch(`https://formsubmit.co/ajax/${encodeURIComponent(to)}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify({
+      _subject: `${rating}/5 review for ${slug}`,
+      _template: "box",
+      _captcha: "false",
+      business: slug,
+      rating: `${rating}/5`,
+      comment,
+      contact: contact || "(none)",
+    }),
+  });
+  if (!mailed.ok) {
+    return NextResponse.json({ error: "Could not send email" }, { status: 502 });
   }
   return NextResponse.json({ ok: true });
 }

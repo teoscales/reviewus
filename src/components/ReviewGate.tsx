@@ -59,16 +59,21 @@ export function ReviewGate({
     };
 
     try {
-      const { error: saveError } = await supabase.from("reviews").insert(payload);
-      if (saveError) {
-        setError("Could not post your review. Try again.");
-        return;
-      }
-      await fetch("/api/notify-owner", {
+      const notify = await fetch("/api/notify-owner", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
+      if (!notify.ok) {
+        setError("Could not post your review. Try again.");
+        return;
+      }
+
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      if (supabaseUrl) {
+        await supabase.from("reviews").insert(payload);
+      }
+
       setStep("sent");
     } catch {
       setError("Could not post your review. Try again.");
