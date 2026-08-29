@@ -75,7 +75,7 @@ async function writeBlob(reviews: Review[]) {
 function merge(a: Review[], b: Review[]) {
   const map = new Map<string, Review>();
   for (const item of [...a, ...b]) map.set(item.id, item);
-  return [...map.values()].sort((x, y) => y.createdAt.localeCompare(x.createdAt));
+  return Array.from(map.values()).sort((x, y) => y.createdAt.localeCompare(x.createdAt));
 }
 
 export async function listReviews() {
