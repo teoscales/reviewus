@@ -148,22 +148,29 @@ export function HomeView() {
 
       {loginOpen ? (
         <form onSubmit={(event) => void login(event)} className="mt-10 space-y-3 text-left">
-          <input
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            type="email"
-            autoComplete="username"
-            placeholder="Email"
-            className="w-full rounded-lg border border-[#dadce0] px-3.5 py-2.5 text-[16px] outline-none focus:border-[#1a73e8]"
-          />
-          <input
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            type="password"
-            autoComplete="current-password"
-            placeholder="Password"
-            className="w-full rounded-lg border border-[#dadce0] px-3.5 py-2.5 text-[16px] outline-none focus:border-[#1a73e8]"
-          />
+          <label className="block">
+            <span className="mb-1 block text-[12px] text-[#5f6368]">Email</span>
+            <input
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              type="text"
+              inputMode="email"
+              autoComplete="username"
+              placeholder="Optional"
+              className="w-full rounded-lg border border-[#dadce0] px-3.5 py-2.5 text-[16px] outline-none focus:border-[#1a73e8]"
+            />
+          </label>
+          <label className="block">
+            <span className="mb-1 block text-[12px] text-[#5f6368]">Password</span>
+            <input
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              type="password"
+              autoComplete="current-password"
+              placeholder="Password"
+              className="w-full rounded-lg border border-[#dadce0] px-3.5 py-2.5 text-[16px] outline-none focus:border-[#1a73e8]"
+            />
+          </label>
           {error ? <p className="text-[13px] text-[#d93025]">{error}</p> : null}
           <button
             type="submit"

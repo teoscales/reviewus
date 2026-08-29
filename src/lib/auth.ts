@@ -20,15 +20,24 @@ export function ownerPassword() {
   return process.env.OWNER_PASSWORD || "";
 }
 
+function sameSecret(a: string, b: string) {
+  const left = Buffer.from(a);
+  const right = Buffer.from(b);
+  if (left.length !== right.length) return false;
+  return timingSafeEqual(left, right);
+}
+
 export function checkLogin(email: string, password: string) {
   const wantEmail = ownerEmail();
   const wantPass = ownerPassword();
-  if (!wantEmail || !wantPass) return false;
-  if (email.trim().toLowerCase() !== wantEmail) return false;
-  const a = Buffer.from(password);
-  const b = Buffer.from(wantPass);
-  if (a.length !== b.length) return false;
-  return timingSafeEqual(a, b);
+  if (!wantPass) return false;
+
+  const trimmed = email.trim().toLowerCase();
+  const looksLikeEmail = trimmed.includes("@");
+  const pass = looksLikeEmail ? password : password || email;
+  if (!sameSecret(pass, wantPass)) return false;
+  if (looksLikeEmail && wantEmail && trimmed !== wantEmail) return false;
+  return true;
 }
 
 export function setSession() {
