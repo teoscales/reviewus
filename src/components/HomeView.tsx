@@ -44,7 +44,7 @@ export function HomeView() {
 
   useEffect(() => {
     if (!owner) return;
-    const id = window.setInterval(() => void refresh(), 4000);
+    const id = window.setInterval(() => void refresh(), 30000);
     return () => window.clearInterval(id);
   }, [owner]);
 

@@ -78,12 +78,17 @@ function merge(a: Review[], b: Review[]) {
   return Array.from(map.values()).sort((x, y) => y.createdAt.localeCompare(x.createdAt));
 }
 
+const BLOB_TTL_MS = 20_000;
+let blobReadAt = 0;
+
 export async function listReviews() {
   const mem = cache().reviews ?? [];
+  if (blobReadAt && Date.now() - blobReadAt < BLOB_TTL_MS) return mem;
   const file = await readFileStore();
   const blob = (await readBlob()) ?? [];
   const all = merge(mem, merge(file, blob));
   cache().reviews = all;
+  blobReadAt = Date.now();
   return all;
 }
 
@@ -104,7 +109,12 @@ export async function addReview(input: {
   const reviews = [review, ...(await listReviews())];
   cache().reviews = reviews;
   await writeFileStore(reviews);
-  await writeBlob(reviews);
+  try {
+    await writeBlob(reviews);
+  } catch {
+    // File cache still holds the review if Blob is paused.
+  }
+  blobReadAt = Date.now();
   return review;
 }
 
