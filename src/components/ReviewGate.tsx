@@ -27,8 +27,14 @@ export function ReviewGate({
   function pick(value: number) {
     setRating(value);
     setError("");
-    if (value >= 4) setStep("thanks");
-    else setStep("form");
+    if (value >= 4) {
+      setStep("thanks");
+      void fetch("/api/reviews", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ business_slug: slug, rating: value }),
+      });
+    } else setStep("form");
   }
 
   useEffect(() => {

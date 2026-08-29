@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
+import { addReview } from "@/lib/reviews-store";
 
 type NotifyBody = {
   business_slug?: string;
@@ -37,6 +38,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Need a comment" }, { status: 400 });
   }
 
+  await addReview({
+    business_slug: slug,
+    rating,
+    comment,
+    contact,
+  });
+
   const from = process.env.RESEND_FROM_EMAIL || "ReviewUs <beth.t@example.com>";
   const stars = "★".repeat(rating) + "☆".repeat(5 - rating);
   const text = [
@@ -49,7 +57,7 @@ export async function POST(request: Request) {
 
   if (key) {
     const resend = new Resend(key);
-    const { error } = await resend.emails.send({
+    await resend.emails.send({
       from,
       to,
       subject: `${rating}/5 review for ${slug}`,
@@ -62,13 +70,10 @@ export async function POST(request: Request) {
         <p>${escapeHtml(comment)}</p>
       `,
     });
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 502 });
-    }
     return NextResponse.json({ ok: true });
   }
 
-  const mailed = await fetch(`https://formsubmit.co/ajax/${encodeURIComponent(to)}`, {
+  await fetch(`https://formsubmit.co/ajax/${encodeURIComponent(to)}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -83,10 +88,7 @@ export async function POST(request: Request) {
       comment,
       contact: contact || "(none)",
     }),
-  });
-  if (!mailed.ok) {
-    return NextResponse.json({ error: "Could not send email" }, { status: 502 });
-  }
+  }).catch(() => null);
   return NextResponse.json({ ok: true });
 }
 
