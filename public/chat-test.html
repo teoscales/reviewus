@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
-<title>Test chatbota – Řecko nás baví</title>
+<title>Test AI asistenta (neoficiální)</title>
 <style>
   :root { color-scheme: light; }
   body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; background: #f4f8f8; color: #12312f; }
@@ -22,6 +22,7 @@
 <main>
   <h1>Test AI asistenta</h1>
   <p>Neveřejná testovací stránka. Chatbot odpovídá z katalogu <b>shop.reckonasbavi.cz</b>; odkazy na produkty vedou do e-shopu.</p>
+  <p><small>Neoficiální asistent – provozuje Theodoros Tselidis, nejde o službu Řecko nás baví. <a href="/chat-gdpr.html">Moje data a GDPR</a> · <a href="/chat-pristupnost.html">Přístupnost</a></small></p>
   <div class="card">
     <b>Vyzkoušejte otázky</b><br>
     <button data-q="Hledám kvalitní olivový olej do 300 Kč">Olivový olej do 300 Kč</button>
@@ -38,6 +39,10 @@
 <script src="/shop-assistant.js"
         data-endpoint="https://qyrwygjgxyjyywzgvwzo.supabase.co/functions/v1/chat"
         data-name="Ema"
+        data-powered-by="Řecko nás baví"
+        data-operator="Theodoros Tselidis"
+        data-privacy-url="https://reviewus.space/chat-gdpr.html"
+        data-accessibility-url="https://reviewus.space/chat-pristupnost.html"
         defer></script>
 <script>
   document.querySelectorAll("button[data-q]").forEach(function (b) {
