@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Test chatbota – Řecko nás baví</title>
+<style>
+  :root { color-scheme: light; }
+  body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; background: #f4f8f8; color: #12312f; }
+  main { max-width: 640px; margin: 0 auto; padding: 48px 16px; }
+  h1 { font-size: 26px; margin: 0 0 8px; }
+  p { line-height: 1.55; }
+  .card { background: #fff; border-radius: 14px; padding: 20px 22px; box-shadow: 0 1px 3px rgba(0,0,0,.08); margin-top: 20px; }
+  ul { padding-left: 18px; line-height: 1.7; }
+  button { font: inherit; border: 1px solid #0e9f9a; color: #0e7f7b; background: #fff; border-radius: 999px; padding: 7px 14px; margin: 4px 4px 0 0; cursor: pointer; }
+  button:hover { background: #e7f6f5; }
+  small { color: #5b7472; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Test AI asistenta</h1>
+  <p>Neveřejná testovací stránka. Chatbot odpovídá z katalogu <b>shop.reckonasbavi.cz</b>; odkazy na produkty vedou do e-shopu.</p>
+  <div class="card">
+    <b>Vyzkoušejte otázky</b><br>
+    <button data-q="Hledám kvalitní olivový olej do 300 Kč">Olivový olej do 300 Kč</button>
+    <button data-q="Co mi doporučíte jako dárek?">Tip na dárek</button>
+    <button data-q="Máte řecký med? Je skladem?">Řecký med skladem?</button>
+    <button data-q="Chci reklamovat objednávku">Reklamace</button>
+    <ul>
+      <li>Ceny, dostupnost a odkazy musí odpovídat e-shopu.</li>
+      <li>U objednávek a reklamací má odkázat na info@reckonasbavi.cz.</li>
+    </ul>
+    <small>Chat otevřete i tlačítkem vpravo dole.</small>
+  </div>
+</main>
+<script src="/shop-assistant.js"
+        data-endpoint="https://qyrwygjgxyjyywzgvwzo.supabase.co/functions/v1/chat"
+        data-name="Ema"
+        defer></script>
+<script>
+  document.querySelectorAll("button[data-q]").forEach(function (b) {
+    b.addEventListener("click", function () { window.ShopAssistant && window.ShopAssistant.ask(b.dataset.q); });
+  });
+</script>
+</body>
+</html>
