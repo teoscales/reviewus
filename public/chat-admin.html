@@ -44,7 +44,7 @@
   .seg button[aria-pressed="true"] { background: var(--teal-soft); color: var(--teal-ink); font-weight: 600; }
 
   /* Karty */
-  .kpis { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 16px; }
   .kpi { background: var(--surface); border-radius: var(--radius); padding: 14px 16px; border: 1px solid var(--line); }
   .kpi .k { font-size: 13px; color: var(--ink-2); }
   .kpi .v { font-size: 28px; font-weight: 700; letter-spacing: -.01em; margin-top: 2px; font-variant-numeric: tabular-nums; }
@@ -185,7 +185,6 @@
   const PAGE = 25;
   const $ = (id) => document.getElementById(id);
   const fmtInt = new Intl.NumberFormat("cs-CZ");
-  const fmtUsd = new Intl.NumberFormat("cs-CZ", { style: "currency", currency: "USD", maximumFractionDigits: 2 });
   const fmtDT = new Intl.DateTimeFormat("cs-CZ", { timeZone: "Europe/Prague", day: "numeric", month: "numeric", hour: "2-digit", minute: "2-digit" });
   const fmtDay = new Intl.DateTimeFormat("cs-CZ", { day: "numeric", month: "numeric" });
 
@@ -278,8 +277,7 @@
       kpi("Konverzace", fmtInt.format(t.chats), state.days === 1 ? "dnes" : `za posledních ${state.days} dní`),
       kpi("Dotazy zákazníků", fmtInt.format(t.turns), `${perChat} na konverzaci`),
       kpi("Přesměrováno na podporu", fmtInt.format(t.contacts), `${pct} % konverzací`),
-      kpi("Odpovědi bez AI", fmtInt.format(t.fallbacks), "záložní vyhledávání (výpadek / rozpočet)"),
-      kpi("Náklady", fmtUsd.format(t.cost_usd), `tento měsíc ${fmtUsd.format(o.budget.month_cost_usd)} z ${fmtUsd.format(o.budget.monthly_usd)}`),
+      kpi("Odpovědi bez AI", fmtInt.format(t.fallbacks), "záložní vyhledávání při výpadku"),
     );
   }
 
@@ -290,7 +288,7 @@
     for (let i = days - 1; i >= 0; i--) {
       const d = new Date(today); d.setDate(today.getDate() - i);
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-      out.push(map.get(key) || { day: key, chats: 0, turns: 0, contacts: 0, fallbacks: 0, cost_usd: 0 });
+      out.push(map.get(key) || { day: key, chats: 0, turns: 0, contacts: 0, fallbacks: 0 });
     }
     return out;
   }
@@ -351,10 +349,10 @@
     function hideTip() { tip.classList.add("hidden"); }
 
     const table = el("table", {},
-      el("thead", {}, el("tr", {}, el("th", {}, "Den"), el("th", {}, "Konverzace"), el("th", {}, "Dotazy"), el("th", {}, "Na podporu"), el("th", {}, "Bez AI"), el("th", {}, "Náklady"))),
+      el("thead", {}, el("tr", {}, el("th", {}, "Den"), el("th", {}, "Konverzace"), el("th", {}, "Dotazy"), el("th", {}, "Na podporu"), el("th", {}, "Bez AI"))),
       el("tbody", {}, rows.slice().reverse().map((r) => el("tr", {},
         el("td", {}, fmtDay.format(new Date(r.day + "T12:00:00"))), el("td", {}, String(r.chats)), el("td", {}, String(r.turns)),
-        el("td", {}, String(r.contacts)), el("td", {}, String(r.fallbacks)), el("td", {}, fmtUsd.format(r.cost_usd))))));
+        el("td", {}, String(r.contacts)), el("td", {}, String(r.fallbacks))))));
     $("table").replaceChildren(table);
   }
   function plural(n, one, few, many) { return `${fmtInt.format(n)} ${n === 1 ? one : n >= 2 && n <= 4 ? few : many}`; }
