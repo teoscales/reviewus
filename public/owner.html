@@ -240,6 +240,28 @@
 
   @media (max-width: 1100px) { .stats { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
   @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+  /* Limity zdarma */
+  .lim-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-bottom: 14px; }
+  .lim-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .lim-head .logo2 { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; font-weight: 700; flex: none; }
+  .lim-head .sb { background: #1c3a2c; color: #3ecf8e; } .lim-head .vc { background: #f2f2f2; color: #000; }
+  .lim-head h2 { margin: 0; font-size: 18px; } .lim-head .tag { margin-left: auto; }
+  .lrow { padding: 12px 0; border-top: 1px solid var(--line); }
+  .lrow:first-of-type { border-top: 0; }
+  .lrow .top2 { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; margin-bottom: 7px; }
+  .lrow .name { font-weight: 600; }
+  .lrow .val { font-family: var(--mono); font-size: 13px; color: var(--ink-2); white-space: nowrap; }
+  .lrow .val b { color: var(--ink); font-weight: 600; }
+  .lrow .note { font-size: 12px; color: var(--ink-3); margin-top: 6px; }
+  .lrow .pct { font-family: var(--mono); font-size: 12px; margin-left: 8px; color: var(--lime); }
+  .lrow .pct.warn { color: var(--amber); } .lrow .pct.over { color: var(--red); }
+  .hint2 { border: 1px dashed var(--line-2); border-radius: 12px; padding: 12px 14px; font-size: 13px; color: var(--ink-2); margin-top: 12px; }
+  .hint2 code { font-family: var(--mono); font-size: 12px; background: var(--panel-2); padding: 2px 6px; border-radius: 6px; color: var(--ink); word-break: break-all; }
+  .warnbox { border: 1px solid #5a4320; background: #2a2112; color: #ffd9a0; border-radius: 12px; padding: 12px 14px; font-size: 13px; margin-bottom: 14px; }
+  .warnbox b { color: #ffb648; }
+  .smalltbl { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; }
+  .smalltbl td { padding: 5px 0; border-top: 1px solid var(--line); } .smalltbl td.num { text-align: right; font-family: var(--mono); color: var(--ink-2); }
+  @media (max-width: 900px) { .lim-grid { grid-template-columns: 1fr; } }
   @media (max-width: 560px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } .cards { grid-template-columns: 1fr; } .stat .v { font-size: 22px; } }
 </style>
 </head>
@@ -265,6 +287,7 @@
       <button type="button" data-view="home" aria-current="page">Domů</button>
       <button type="button" data-view="list">Firmy<span class="count hidden" id="navBad"></span></button>
       <button type="button" data-view="cal">Kalendář</button>
+      <button type="button" data-view="limits">Limity<span class="count hidden" id="navLim"></span></button>
     </nav>
     <div class="tools">
       <div class="seg" role="group" aria-label="Období" id="periodSeg">
@@ -335,6 +358,12 @@
     <div class="stats" id="stats"></div>
     <div class="section-head"><h2>Firmy</h2><button class="btn" type="button" id="addCo">+ Přidat firmu</button></div>
     <div class="cards" id="cards"></div>
+  </div>
+
+  <!-- Limity zdarma -->
+  <div id="vLimits" class="hidden">
+    <div class="section-head"><div><h2 style="font-size:24px">Limity zdarma</h2><div class="muted" id="limSub" style="font-size:13px"></div></div><button class="btn" type="button" id="limReload">Načíst znovu</button></div>
+    <div id="limits"></div>
   </div>
 
   <!-- Detail firmy -->
@@ -793,21 +822,114 @@
   // --- pohledy ------------------------------------------------------------------
   function setView(v) {
     state.view = v;
-    for (const [id, name] of [["vHome", "home"], ["vList", "list"], ["vDetail", "detail"], ["vCal", "cal"]]) $(id).classList.toggle("hidden", v !== name);
+    for (const [id, name] of [["vHome", "home"], ["vList", "list"], ["vDetail", "detail"], ["vCal", "cal"], ["vLimits", "limits"]]) $(id).classList.toggle("hidden", v !== name);
     document.querySelectorAll("[data-view]").forEach((b) => {
       const on = b.dataset.view === v || (v === "detail" && b.dataset.view === "list");
       if (on) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current");
     });
     $("periodSeg").classList.toggle("hidden", !(v === "list" || v === "detail"));
     document.body.classList.toggle("home-mode", v === "home");
-    if (v === "home" || v === "cal") $("updated").textContent = v === "home" ? "// přehled dne" : "// kalendář";
+    if (v === "home" || v === "cal" || v === "limits") $("updated").textContent = v === "home" ? "// přehled dne" : v === "cal" ? "// kalendář" : "// limity zdarma";
   }
   function showView(v) {
     if (v !== "detail") state.companyId = null;
     setView(v);
-    if (v === "home") loadHome(); else if (v === "cal") loadCal(); else if (v === "list") loadList();
+    if (v === "home") loadHome(); else if (v === "cal") loadCal(); else if (v === "list") loadList(); else if (v === "limits") loadLimits();
   }
   document.querySelectorAll("[data-view]").forEach((b) => b.addEventListener("click", () => showView(b.dataset.view)));
+
+  // --- Limity zdarma (Supabase Free, Vercel Hobby) -------------------------------------------
+  const fmtBytes = (b) => {
+    if (b === null || b === undefined) return "—";
+    const u = ["B", "kB", "MB", "GB", "TB"]; let i = 0, v = Number(b);
+    while (v >= 1024 && i < u.length - 1) { v /= 1024; i++; }
+    return (v >= 100 || i === 0 ? Math.round(v) : v.toFixed(v >= 10 ? 1 : 2)).toString().replace(".", ",") + " " + u[i];
+  };
+  const fmtQty = (q, unit) => {
+    const n = Number(q) || 0;
+    const s = n >= 1000 ? fmtInt.format(Math.round(n)) : n.toLocaleString("cs-CZ", { maximumFractionDigits: 2 });
+    return unit ? `${s} ${unit}` : s;
+  };
+  function limRow(name, valueText, pct, note) {
+    const p = pct === null || pct === undefined ? null : Math.max(0, pct);
+    const cls = p === null ? "" : p >= 100 ? " over" : p >= 80 ? " warn" : "";
+    return el("div", { class: "lrow" },
+      el("div", { class: "top2" }, el("span", { class: "name" }, name),
+        el("span", { class: "val" }, valueText, p === null ? null : el("span", { class: "pct" + cls }, (p < 0.1 && p > 0 ? "<0,1" : p.toFixed(p < 10 ? 1 : 0).replace(".", ",")) + " %"))),
+      p === null ? null : el("div", { class: "meter" + cls, role: "meter", "aria-valuenow": String(Math.round(p)), "aria-valuemin": "0", "aria-valuemax": "100", "aria-label": name }, el("i", { style: `width:${Math.min(100, p).toFixed(1)}%` })),
+      note ? el("div", { class: "note" }, note) : null);
+  }
+  let limitsData = null;
+  async function loadLimits(force) {
+    if (!force && limitsData) { renderLimits(limitsData); return; }
+    $("limits").replaceChildren(el("div", { class: "empty" }, "Načítám…"));
+    try { limitsData = await api({ action: "platform" }); renderLimits(limitsData); }
+    catch (err) { if (err.message !== "unauthorized") $("limits").replaceChildren(el("div", { class: "errbox" }, "Nepodařilo se načíst: " + err.message)); }
+  }
+  $("limReload").addEventListener("click", () => loadLimits(true));
+  function renderLimits(d) {
+    const L = d.limits.supabase, sb = d.supabase, vc = d.vercel;
+    $("limSub").textContent = `Supabase Free · Vercel Hobby · limity ověřeny ${new Date(d.checked + "T12:00:00").toLocaleDateString("cs-CZ")}`;
+    const pcts = [];
+    // Supabase
+    const sbRows = [];
+    if (sb.ok) {
+      const now = new Date(); const day = now.getDate(); const dim = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+      const proj = (v) => Math.round((v / Math.max(day, 1)) * dim);
+      const p1 = (sb.db_bytes / L.db_bytes) * 100, p2 = sb.storage_bytes === null ? null : (sb.storage_bytes / L.storage_bytes) * 100;
+      const p3 = (sb.month_calls / L.function_calls) * 100, p4 = (sb.month_bytes / L.egress_bytes) * 100;
+      pcts.push(p1, p3, p4); if (p2 !== null) pcts.push(p2);
+      sbRows.push(
+        limRow("Databáze", el("span", {}, el("b", {}, fmtBytes(sb.db_bytes)), " / 500 MB"), p1),
+        limRow("Úložiště souborů", el("span", {}, el("b", {}, fmtBytes(sb.storage_bytes)), " / 1 GB"), p2, sb.storage_objects !== null ? `${fmtInt.format(sb.storage_objects)} souborů (obrázek chatbota)` : null),
+        limRow("Volání Edge Functions · tento měsíc", el("span", {}, el("b", {}, fmtInt.format(sb.month_calls)), " / 500 000"), p3,
+          `Odhad na konec měsíce: ${fmtInt.format(proj(sb.month_calls))}. Počítá chat, administraci, tento panel i synchronizaci katalogu.`),
+        limRow("Odchozí data (odhad) · tento měsíc", el("span", {}, el("b", {}, fmtBytes(sb.month_bytes)), " / 5 GB"), p4,
+          `Odhad z velikosti odpovědí funkcí; bez stahování obrázku z úložiště. Na konec měsíce ~${fmtBytes(proj(sb.month_bytes))}.`),
+      );
+      const idleDays = sb.last_activity ? (Date.now() - new Date(sb.last_activity).getTime()) / 864e5 : null;
+      sbRows.push(el("div", { class: "lrow" }, el("div", { class: "top2" }, el("span", { class: "name" }, "Uspání projektu"),
+        el("span", { class: "val" }, idleDays === null ? "zatím žádná aktivita" : "poslední chat " + ago(sb.last_activity))),
+        el("div", { class: "note" }, idleDays !== null && idleDays >= 5 ? "⚠ Free projekt se uspí po 7 dnech bez aktivity – stačí otevřít chat nebo administraci." : "Free projekt se uspí po 7 dnech bez aktivity. Synchronizace katalogu běží denně, takže by k tomu nemělo dojít.")));
+      if (sb.by_function.length || sb.tables.length) {
+        sbRows.push(el("div", { class: "lrow" }, el("div", { class: "kv", style: "grid-template-columns:1fr 1fr;gap:18px" },
+          el("div", {}, el("div", { class: "k" }, "VOLÁNÍ PODLE FUNKCE"), el("table", { class: "smalltbl" }, el("tbody", {}, sb.by_function.map((f) => el("tr", {}, el("td", {}, f.fn), el("td", { class: "num" }, fmtInt.format(f.calls))))))),
+          el("div", {}, el("div", { class: "k" }, "NEJVĚTŠÍ TABULKY"), el("table", { class: "smalltbl" }, el("tbody", {}, sb.tables.slice(0, 5).map((t) => el("tr", {}, el("td", {}, t.name), el("td", { class: "num" }, fmtBytes(t.bytes))))))))));
+      }
+    } else sbRows.push(el("div", { class: "errbox" }, "Supabase: " + sb.error));
+    sbRows.push(el("div", { class: "note muted", style: "font-size:12px;margin-top:10px" }, "Po překročení Free limitů Supabase může omezit projekt; Pro tarif od $25 / měsíc. ",
+      el("a", { href: L.source, target: "_blank", rel: "noopener" }, "Ceník Supabase"), " · ",
+      el("a", { href: "https://supabase.com/dashboard/project/_/settings/billing/usage", target: "_blank", rel: "noopener" }, "Využití v Supabase")));
+    // Vercel
+    const vcRows = [];
+    if (!vc.configured) {
+      vcRows.push(el("div", { class: "hint2" },
+        el("div", { style: "margin-bottom:6px" }, "Pro načtení skutečného využití přidej token Vercelu (ve Vercelu: Account Settings → Tokens, omez ho na svůj tým a dej mu platnost třeba 90 dní). Pak přidej do souboru .env dva řádky a spusť npm run deploy:"),
+        el("code", {}, "VERCEL_TOKEN=…  a  VERCEL_TEAM_ID=team_…"),
+        el("div", { style: "margin-top:6px" }, "Token se nikdy nedostane do prohlížeče – čte ho jen server.")));
+      vcRows.push(...d.limits.vercel.map((l) => limRow(l.label, el("span", {}, "limit ", el("b", {}, fmtQty(l.limit, l.unit === "count" ? "" : l.unit === "hours" ? "h" : "GB"))), null)));
+    } else if (!vc.ok) {
+      vcRows.push(el("div", { class: "errbox" }, vc.error));
+    } else {
+      const withLim = vc.items.filter((i) => i.limit !== undefined), other = vc.items.filter((i) => i.limit === undefined && i.quantity > 0);
+      withLim.forEach((i) => { if (i.pct !== null) pcts.push(i.pct); });
+      vcRows.push(...withLim.map((i) => limRow(i.label || i.name, el("span", {}, el("b", {}, fmtQty(i.quantity, i.unit)), ` / ${fmtQty(i.limit, i.limit_unit === "count" ? "" : i.limit_unit === "hours" ? "h" : "GB")}`), i.pct)));
+      if (!withLim.length) vcRows.push(el("div", { class: "empty" }, "Tento měsíc zatím žádné využití."));
+      if (other.length) vcRows.push(el("div", { class: "lrow" }, el("div", { class: "k muted", style: "font-size:11px" }, "OSTATNÍ"),
+        el("table", { class: "smalltbl" }, el("tbody", {}, other.map((i) => el("tr", {}, el("td", {}, i.name), el("td", { class: "num" }, fmtQty(i.quantity, i.unit))))))));
+    }
+    vcRows.push(el("div", { class: "note muted", style: "font-size:12px;margin-top:10px" }, "Na Hobby se nic neplatí; po překročení limitu se služba zastaví až do uplynutí 30 dní. ",
+      el("a", { href: d.limits.vercel_source, target: "_blank", rel: "noopener" }, "Limity Hobby"), " · ",
+      el("a", { href: "https://vercel.com/d?to=%2F%5Bteam%5D%2F~%2Fusage&title=Usage", target: "_blank", rel: "noopener" }, "Využití ve Vercelu")));
+    const max = pcts.length ? Math.max(...pcts) : 0;
+    $("navLim").textContent = "!"; $("navLim").classList.toggle("hidden", max < 80);
+    $("limits").replaceChildren(
+      el("div", { class: "warnbox" }, el("b", {}, "Vercel Hobby je jen pro nekomerční použití. "),
+        "Chat pro e-shop je komerční služba – než ho spustíš naostro, přesuň widget a videa jinam (např. do úložiště Supabase) nebo přejdi na Vercel Pro, jinak hrozí pozastavení webu."),
+      el("div", { class: "lim-grid" },
+        el("section", { class: "panel" }, el("div", { class: "lim-head" }, el("span", { class: "logo2 sb", "aria-hidden": "true" }, "S"), el("h2", {}, "Supabase"), el("span", { class: "pill tag" }, "Free")), ...sbRows),
+        el("section", { class: "panel" }, el("div", { class: "lim-head" }, el("span", { class: "logo2 vc", "aria-hidden": "true" }, "▲"), el("h2", {}, "Vercel"), el("span", { class: "pill tag" }, "Hobby")), ...vcRows)));
+  }
 
   // --- datum a čas (Europe/Prague) -------------------------------------------------
   const TZ = "Europe/Prague";
@@ -866,6 +988,7 @@
 
   // --- Domů -----------------------------------------------------------------------
   async function loadHome() {
+    if (!limitsData) loadLimits(); // na pozadí – kvůli upozornění u záložky Limity
     tick();
     const today = isoDay(new Date());
     try {
