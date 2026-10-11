@@ -38,6 +38,14 @@
   .btn.primary { background: var(--lime); color: var(--lime-ink); border-color: var(--lime); }
   .btn.primary:hover { filter: brightness(1.05); }
   .btn.danger { color: var(--red); border-color: #5a2a2e; }
+  .btn.danger.armed { background: var(--red); color: #1a0b0c; border-color: var(--red); }
+  .lookup { display: flex; gap: 8px; margin: 12px 0 4px; flex-wrap: wrap; }
+  .lookup .field { flex: 1; min-width: 200px; max-width: 360px; }
+  .datarow { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 14px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--line); }
+  .datarow:last-child { border-bottom: 0; }
+  .datarow .id { font-family: var(--mono); font-size: 13px; }
+  .datarow .facts { display: flex; gap: 6px 14px; flex-wrap: wrap; font-size: 12px; color: var(--ink-3); margin-top: 2px; }
+  .datarow .done { color: var(--lime); font-family: var(--mono); font-size: 13px; }
   .btn:focus-visible, .card:focus-visible, .seg button:focus-visible { outline: 2px solid var(--lime); outline-offset: 2px; }
 
   /* Přihlášení */
@@ -612,6 +620,7 @@
 
     // Chybné odpovědi + poznámky
     parts.push(el("div", { class: "grid" }, feedbackPanel(c, s), notesPanel(c)));
+    parts.push(dataPanel(c));
     $("detail").replaceChildren(...parts);
   }
 
@@ -689,6 +698,53 @@
           saved));
     }) : [el("div", { class: "empty" }, state.showResolved ? "Zatím nic označeného." : "Žádné neřešené chyby. 👌")];
     return el("section", { class: "panel" }, head, ...list);
+  }
+
+  // Úplný výmaz dat zákazníka na žádost e-mailem (kód = prvních 8 znaků ID konverzace, ukáže ho chat po „Smazat moje data“).
+  function dataPanel(c) {
+    const input = el("input", { class: "field mono", placeholder: "kód z e-mailu, např. 3f9a1c2e", maxlength: "36", "aria-label": "Kód konverzace", autocomplete: "off" });
+    const out = el("div", {});
+    const describe = (x) => {
+      const facts = [];
+      if (x.erased_at) facts.push(`text smazán ${x.erased_by === "admin" ? "v administraci" : "zákazníkem"} ${fmtDT.format(new Date(x.erased_at))}`);
+      else if (x.updated_at) facts.push(`text uložen · ${x.messages} zpráv`);
+      else facts.push("konverzace už vypršela, zbývá jen statistika");
+      facts.push(`${x.usage_rows}× ve statistice`);
+      if (x.feedback_rows) facts.push(`${x.feedback_rows}× označená odpověď`);
+      const from = x.created_at || x.first_usage, to = x.updated_at || x.last_usage;
+      if (from) facts.push(`${fmtDT.format(new Date(from))}${to && to !== from ? " – " + fmtDT.format(new Date(to)) : ""}`);
+      return facts;
+    };
+    const row = (x) => {
+      let armed = false;
+      const btn = el("button", { class: "btn danger", type: "button" }, "Smazat vše natrvalo");
+      const box = el("div", { class: "datarow" },
+        el("div", {}, el("div", { class: "id" }, x.session_id), el("div", { class: "facts" }, describe(x).map((f) => el("span", {}, f)))),
+        btn);
+      btn.addEventListener("click", async () => {
+        if (!armed) { armed = true; btn.classList.add("armed"); btn.textContent = "Opravdu? Nejde vrátit"; return; }
+        btn.disabled = true;
+        try {
+          await api({ action: "data_purge", company_id: c.id, session_id: x.session_id });
+          box.replaceChildren(el("div", {}, el("div", { class: "id" }, x.session_id), el("div", { class: "facts" }, "konverzace, statistika i označení smazány")), el("span", { class: "done" }, "✓ smazáno"));
+        } catch (err) { if (err.message !== "unauthorized") { btn.disabled = false; btn.textContent = "chyba: " + err.message; } }
+      });
+      return box;
+    };
+    const find = async () => {
+      out.replaceChildren(el("div", { class: "empty" }, "Hledám…"));
+      try {
+        const r = await api({ action: "data_lookup", company_id: c.id, code: input.value });
+        out.replaceChildren(...(r.items.length ? r.items.map(row) : [el("div", { class: "empty" }, "Nic nenalezeno. Zkontroluj kód, případně už bylo smazáno.")]));
+      } catch (err) { if (err.message !== "unauthorized") out.replaceChildren(el("div", { class: "errbox" }, err.message)); }
+    };
+    input.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); find(); } });
+    return el("section", { class: "panel", style: "margin-top:14px" },
+      el("div", { class: "section-head" }, el("h2", {}, "Mazání dat (GDPR)")),
+      el("p", { class: "muted", style: "font-size:13px;margin:0" },
+        "Po „Smazat moje data“ v chatu zůstane jen řádek „smazáno uživatelem“ a počet ve statistice. Když zákazník napíše e-mailem s kódem a chce smazat i to, najdi ho tady a smaž natrvalo (konverzaci, statistiku i označené odpovědi)."),
+      el("div", { class: "lookup" }, input, el("button", { class: "btn primary", type: "button", onclick: find }, "Najít")),
+      out);
   }
 
   function notesPanel(c) {

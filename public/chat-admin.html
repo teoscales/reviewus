@@ -189,6 +189,10 @@
   .row .q { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .row .meta { display: flex; gap: 6px; align-items: center; font-size: 12px; color: var(--ink-3); white-space: nowrap; }
   .badge { display: inline-block; font-size: 12px; font-weight: 700; padding: 2px 9px; border-radius: 999px; background: var(--terra-soft); color: var(--terra-ink); }
+  .badge.gone { background: #eeebe4; color: var(--ink-2); }
+  .erased { color: var(--ink-3) !important; font-style: italic; font-weight: 600; }
+  .erasedbox { display: grid; gap: 8px; place-items: center; text-align: center; padding: 36px 20px; color: var(--ink-2); background: #fff; border: 1px dashed var(--line-2); border-radius: 16px; }
+  .erasedbox b { font-family: var(--serif); font-size: 18px; color: var(--ink); }
   .badge.bad { background: var(--red-soft); color: var(--red); }
   .badge.good { background: var(--teal-soft); color: var(--teal-ink); }
   .pager { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; font-size: 13px; color: var(--ink-2); gap: 8px; flex-wrap: wrap; }
@@ -435,7 +439,7 @@
         <div class="rows" id="rows"></div>
         <div class="pager"><span id="pinfo"></span><span><button class="btn ghost sm" type="button" id="prev">← Novější</button> <button class="btn ghost sm" type="button" id="next">Starší →</button></span></div>
       </section>
-      <p class="sub note">Konverzace se automaticky mažou po 30 dnech. Statistiky (bez textu zpráv) se drží 13 měsíců.</p>
+      <p class="sub note">Konverzace se automaticky mažou po 30 dnech. Statistiky (bez textu zpráv) se drží 13 měsíců. Když zákazník klikne na „Smazat moje data“, zůstane tu jen řádek „Data z chatu byla smazána uživatelem“ a počet ve statistice.</p>
     </section>
 
     <!-- Kalendář -->
@@ -541,7 +545,7 @@
 <aside class="drawer hidden" id="drawer" role="dialog" aria-modal="true" aria-labelledby="dTitle">
   <header><div><h2 id="dTitle">Konverzace</h2><div class="sub" id="dSub"></div></div><button class="btn ghost sm" type="button" id="dClose">Zavřít</button></header>
   <div class="transcript" id="transcript"></div>
-  <footer><span class="sub" id="dId"></span><button class="btn danger sm" type="button" id="dDelete">Smazat konverzaci</button></footer>
+  <footer><span class="sub" id="dId"></span><button class="btn danger sm" type="button" id="dDelete" title="Smaže text konverzace. Ve statistice zůstane jen počet.">Smazat text konverzace</button></footer>
 </aside>
 
 <div class="modal hidden" id="evModal" role="dialog" aria-modal="true" aria-labelledby="eTitleH">
@@ -597,6 +601,7 @@
     for (const k of kids.flat()) if (k !== null && k !== undefined && k !== false) e.append(k);
     return e;
   }
+  const erasedText = (by) => by === "admin" ? "Data z chatu byla smazána v administraci" : "Data z chatu byla smazána uživatelem";
   function plural(n, one, few, many) { return `${fmtInt.format(n)} ${n === 1 ? one : n >= 2 && n <= 4 ? few : many}`; }
 
   async function api(body) {
@@ -805,9 +810,9 @@
     if (recent.status === "fulfilled") {
       const items = recent.value.items;
       $("recent").replaceChildren(...(items.length ? items.map((c) => el("button", { type: "button", onclick: () => openConversation(c.session_id) },
-        el("span", { class: "q" }, c.first_message || "(bez textu)"),
+        c.erased_at ? el("span", { class: "q erased" }, erasedText(c.erased_by)) : el("span", { class: "q" }, c.first_message || "(bez textu)"),
         el("span", { class: "when" }, isoDay(new Date(c.updated_at)) === today ? "dnes " + fmtTime.format(new Date(c.updated_at)) : fmtDT.format(new Date(c.updated_at))),
-        el("span", { class: "meta" }, c.contact ? el("span", { class: "badge" }, "Podpora") : null,
+        el("span", { class: "meta" }, c.erased_at ? el("span", { class: "badge gone" }, "Smazáno") : null, c.contact ? el("span", { class: "badge" }, "Podpora") : null,
           plural(c.turns, "dotaz", "dotazy", "dotazů"), c.products ? " · " + plural(c.products, "produkt", "produkty", "produktů") : ""),
       )) : [el("div", { class: "empty" }, "Zatím žádné konverzace.")]));
     }
@@ -976,8 +981,8 @@
         type: "button", class: "row", "aria-current": String(c.session_id === state.current), onclick: () => openConversation(c.session_id),
       },
         el("span", { class: "when" }, fmtDT.format(new Date(c.updated_at))),
-        el("span", { class: "q" }, c.first_message || "(bez textu)"),
-        el("span", { class: "meta" }, c.contact ? el("span", { class: "badge" }, "Podpora") : null,
+        c.erased_at ? el("span", { class: "q erased" }, erasedText(c.erased_by)) : el("span", { class: "q" }, c.first_message || "(bez textu)"),
+        el("span", { class: "meta" }, c.erased_at ? el("span", { class: "badge gone" }, "Smazáno") : null, c.contact ? el("span", { class: "badge" }, "Podpora") : null,
           plural(c.turns, "dotaz", "dotazy", "dotazů"), c.products ? " · " + plural(c.products, "produkt", "produkty", "produktů") : ""),
       )));
       const from = r.total ? state.offset + 1 : 0, to = Math.min(state.offset + PAGE, r.total);
@@ -1001,6 +1006,15 @@
     $("dClose").focus();
     try {
       const c = await api({ action: "conversation", session_id: id });
+      $("dDelete").classList.toggle("hidden", !!c.erased_at);
+      if (c.erased_at) {
+        $("dSub").textContent = `${fmtDT.format(new Date(c.created_at))} – ${fmtDT.format(new Date(c.updated_at))}`;
+        $("transcript").replaceChildren(el("div", { class: "erasedbox" },
+          el("b", {}, erasedText(c.erased_by)),
+          el("span", {}, `Smazáno ${fmtDT.format(new Date(c.erased_at))}. Text konverzace už neexistuje, ve statistice zůstal jen počet.`),
+          el("span", { class: "sub" }, "Úplný výmaz i z počtů řeší provozovatel na žádost zákazníka e-mailem.")));
+        return;
+      }
       const names = new Map(c.products.map((p) => [p.id, p]));
       const turns = c.messages.filter((m) => m.role === "user").length;
       $("dSub").textContent = `${fmtDT.format(new Date(c.created_at))} – ${fmtDT.format(new Date(c.updated_at))} · ${plural(turns, "dotaz", "dotazy", "dotazů")}`;
@@ -1033,10 +1047,10 @@
 
   // Mazání ve dvou krocích (bez systémového potvrzovacího okna).
   let armed = false;
-  function resetDelete() { armed = false; $("dDelete").textContent = "Smazat konverzaci"; }
+  function resetDelete() { armed = false; $("dDelete").textContent = "Smazat text konverzace"; $("dDelete").classList.remove("hidden"); }
   $("dDelete").addEventListener("click", async () => {
     if (!state.current) return;
-    if (!armed) { armed = true; $("dDelete").textContent = "Opravdu smazat? Klikněte znovu"; return; }
+    if (!armed) { armed = true; $("dDelete").textContent = "Opravdu smazat text? Klikněte znovu"; return; }
     try {
       await api({ action: "delete", session_id: state.current });
       closeDrawer();

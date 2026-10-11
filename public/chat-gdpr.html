@@ -17,6 +17,7 @@
   th { background: #e9f4f3; }
   a { color: #0b6f7a; }
   ul { padding-left: 20px; }
+  code { background: #e9f4f3; padding: 1px 6px; border-radius: 6px; font-size: 14px; }
   @media (max-width: 600px) { table, thead, tbody, tr, th, td { display: block; } th { display: none; } td { border: 0; padding: 4px 0; } tr { border-bottom: 1px solid #dde8e7; padding: 8px 0; } }
 </style>
 </head>
@@ -60,11 +61,18 @@
       <tr><td>Konverzace (text zpráv)</td><td>30 dní od poslední zprávy, poté se automaticky smaže</td></tr>
       <tr><td>Odpovědi označené v administraci jako chybné nebo dobré (kopie dotazu a odpovědi)</td><td>90 dní, slouží ke zlepšování asistenta</td></tr>
       <tr><td>Hash IP adresy a počitadla proti zneužití</td><td>2 dny</td></tr>
-      <tr><td>Technické záznamy o využití (bez obsahu zpráv)</td><td>13 měsíců (vyúčtování a kontrola nákladů)</td></tr>
+      <tr><td>Technické záznamy o využití (bez obsahu zpráv)</td><td>13 měsíců (vyúčtování, kontrola nákladů a souhrnné statistiky)</td></tr>
+      <tr><td>Záznam „Data z chatu byla smazána uživatelem“ po smazání textu (bez obsahu zpráv)</td><td>30 dní od poslední zprávy, poté se automaticky smaže</td></tr>
       <tr><td>Identifikátor konverzace ve vašem prohlížeči</td><td>do zavření okna nebo záložky</td></tr>
     </tbody>
   </table>
-  <p>Kliknutím na <strong>„Smazat moje data“</strong> v patičce chatu smažete konverzaci i související záznamy okamžitě. Totéž se stane se starou konverzací, když v chatu kliknete na „Začít novou konverzaci“ (↻).</p>
+  <h2 id="smazani">Co se stane, když smažete svá data</h2>
+  <div class="box">
+    <p style="margin-top:0">Kliknutím na <strong>„Smazat moje data“</strong> v patičce chatu okamžitě smažete <strong>text celé konverzace</strong> (vaše zprávy i odpovědi asistenta) a odpovědi, které byly z této konverzace označené v administraci.</p>
+    <p>V administraci pak u konverzace zůstane jen řádek <em>„Data z chatu byla smazána uživatelem“</em>, bez jakéhokoli textu. Ve statistice (počet konverzací a dotazů za den) se konverzace dál počítá jako jedno číslo. Tyto technické záznamy neobsahují obsah zpráv ani nic, co by vás identifikovalo.</p>
+    <p>Pokud chcete smazat <strong>úplně všechno, včetně tohoto čísla ve statistice</strong>, napište na <a href="mailto:nexonagencyeu@gmail.com">nexonagencyeu@gmail.com</a> a uveďte <strong>kód</strong>, který vám chat ukázal po smazání (8 znaků, např. <code>3f9a1c2e</code>). Podle kódu záznamy dohledáme a smažeme je natrvalo.</p>
+    <p style="margin-bottom:0">Tlačítko „Začít novou konverzaci“ (↻) nic nemaže. Jen začne novou konverzaci a předchozí se smaže automaticky po 30 dnech, pokud ji nesmažete dřív.</p>
+  </div>
 
   <h2>5. Kdo údaje zpracovává pro nás</h2>
   <p>Využíváme tyto poskytovatele (zpracovatele), kteří údaje zpracovávají jen podle našich pokynů:</p>
@@ -83,7 +91,7 @@
   <p>Chat nepoužívá cookies, analytické ani reklamní nástroje. Do úložiště relace v prohlížeči (sessionStorage) ukládá jen to, co je nutné pro fungování chatu: identifikátor konverzace a zobrazené zprávy.</p>
 
   <h2>7. Vaše práva</h2>
-  <p>Máte právo na přístup ke svým údajům, jejich opravu, výmaz, omezení zpracování a přenositelnost a právo vznést námitku proti zpracování. Nejrychleji smažete svá data tlačítkem „Smazat moje data“ přímo v chatu. Ostatní žádosti pište na <a href="mailto:nexonagencyeu@gmail.com">nexonagencyeu@gmail.com</a>. Protože konverzace nejsou spojené s vaším jménem, uveďte prosím přibližný čas a obsah konverzace, abychom ji mohli dohledat. Odpovíme nejpozději do jednoho měsíce.</p>
+  <p>Máte právo na přístup ke svým údajům, jejich opravu, výmaz, omezení zpracování a přenositelnost a právo vznést námitku proti zpracování. Nejrychleji smažete text konverzace tlačítkem „Smazat moje data“ přímo v chatu (viz <a href="#smazani">Co se stane, když smažete svá data</a>). Úplný výmaz včetně statistiky a ostatní žádosti pište na <a href="mailto:nexonagencyeu@gmail.com">nexonagencyeu@gmail.com</a>. Protože konverzace nejsou spojené s vaším jménem, uveďte prosím kód z chatu, nebo přibližný čas a obsah konverzace, abychom ji mohli dohledat. Odpovíme nejpozději do jednoho měsíce.</p>
   <p>Pokud se domníváte, že zpracování porušuje předpisy, můžete podat stížnost u Úřadu pro ochranu osobních údajů (Pplk. Sochora 27, 170 00 Praha 7, <a href="https://uoou.gov.cz" rel="noopener">uoou.gov.cz</a>).</p>
 
   <h2>8. Upozornění k odpovědím asistenta</h2>
