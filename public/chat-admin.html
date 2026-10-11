@@ -484,6 +484,11 @@
           <form class="form" id="setForm" autocomplete="off">
             <label class="switch"><input type="checkbox" id="sEnabled"> Chat je zapnutý na webu</label>
             <div>
+              <label for="sShop">Název obchodu</label>
+              <input class="field" id="sShop" maxlength="80" placeholder="Řecko nás baví">
+              <div class="hint">Zobrazuje se tady v administraci a chatbot ho používá v odpovědích.</div>
+            </div>
+            <div>
               <label for="sName">Jméno chatbota</label>
               <input class="field" id="sName" maxlength="40" placeholder="Ema">
             </div>
@@ -689,7 +694,7 @@
     const name = botName();
     $("brandAv").replaceWith(Object.assign(avatarNode(name, s.avatar_url, "av sm"), { id: "brandAv" }));
     $("brandName").textContent = name + " · administrace";
-    $("brandShop").textContent = state.shop || "AI asistent e-shopu";
+    $("brandShop").textContent = s.shop_name || state.shop || "AI asistent e-shopu";
     const on = s.enabled !== false;
     $("botStatus").replaceChildren(el("i", { class: "dot " + (on ? "on" : "off") }), el("span", {}, on ? "Chat je zapnutý na webu" : "Chat je vypnutý"));
     $("heroLead").textContent = `Tady je přehled toho, jak se dnes daří chatbotovi ${name}, a co máte v plánu.`;
@@ -1231,6 +1236,7 @@
       position: (document.querySelector("input[name=sPos]:checked") || {}).value || null,
       shop_info: $("sInfo").value,
       contact_email: $("sEmail").value,
+      shop_name: $("sShop").value,
     };
   }
   function fillForm(s) {
@@ -1245,6 +1251,8 @@
     document.querySelectorAll("input[name=sPos]").forEach((r) => { r.checked = r.value === (s.position || "right"); });
     $("sInfo").value = s.shop_info || "";
     $("sEmail").value = s.contact_email || "";
+    $("sShop").value = s.shop_name || "";
+    if (s.shop_name) { state.shop = s.shop_name; $("heroShop").textContent = s.shop_name; }
     renderPreview();
   }
   function renderPreview() {
