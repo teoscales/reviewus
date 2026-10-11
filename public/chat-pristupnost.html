@@ -4,54 +4,242 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Přístupnost – AI nákupní asistent</title>
+<meta name="description" content="Prohlášení o přístupnosti chatovacího okna AI nákupního asistenta a krátké video, jak chat funguje.">
+<meta name="theme-color" content="#f4f1e9">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=Nunito+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
-  body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; background: #f4f8f8; color: #12312f; line-height: 1.6; }
-  main { max-width: 760px; margin: 0 auto; padding: 40px 16px 64px; }
-  h1 { font-size: 28px; line-height: 1.25; margin: 0 0 6px; }
-  h2 { font-size: 19px; margin: 32px 0 8px; }
-  .meta { color: #5b7472; margin: 0 0 24px; }
-  .box { background: #fff; border-radius: 14px; padding: 18px 20px; box-shadow: 0 1px 3px rgba(0,0,0,.08); margin: 16px 0; }
-  a { color: #0b6f7a; }
-  ul { padding-left: 20px; }
+  :root {
+    --bg: #f4f1e9; --ink: #14313a; --ink-2: #4a6168; --ink-3: #7a8b8f; --teal: #13a39b; --teal-2: #0c8a83; --teal-soft: #e3f3f0;
+    --card: rgba(255,255,255,.86); --line: #e7e1d3; --ok: #1f9a5e; --amber: #c98a12;
+    --head: "Outfit", "Segoe UI", system-ui, sans-serif; --body: "Nunito Sans", "Segoe UI", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+  body { margin: 0; font: 17px/1.65 var(--body); color: var(--ink); background: var(--bg); }
+  a { color: var(--teal-2); text-underline-offset: 3px; }
+  a:hover { color: var(--teal); }
+  :focus-visible { outline: 3px solid var(--teal); outline-offset: 3px; border-radius: 6px; }
+  strong { color: var(--ink); }
+  .skip { position: absolute; left: -999px; top: 8px; background: var(--ink); color: #fff; padding: 8px 14px; border-radius: 10px; z-index: 10; }
+  .skip:focus { left: 8px; }
+
+  /* Pozadí jako ve videu: krémová s rozmazanými barevnými skvrnami */
+  .bg { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+  .bg span { position: absolute; border-radius: 50%; filter: blur(80px); }
+  .bg .b1 { width: 560px; height: 560px; right: -140px; top: -160px; background: #c9e5dc; opacity: .9; animation: f1 34s ease-in-out infinite alternate; }
+  .bg .b2 { width: 520px; height: 520px; left: 50%; top: 32%; margin-left: -260px; background: #f3e3b6; opacity: .55; animation: f2 42s ease-in-out infinite alternate; }
+  .bg .b3 { width: 480px; height: 480px; left: -180px; bottom: -160px; background: #d4e3ef; opacity: .9; animation: f3 38s ease-in-out infinite alternate; }
+  @keyframes f1 { to { transform: translate(-90px, 70px) scale(1.08); } }
+  @keyframes f2 { to { transform: translate(80px, -60px) scale(.92); } }
+  @keyframes f3 { to { transform: translate(110px, -50px) scale(1.06); } }
+
+  main { max-width: 860px; margin: 0 auto; padding: 56px 20px 72px; }
+  h1, h2, h3 { font-family: var(--head); letter-spacing: -.02em; line-height: 1.15; color: var(--ink); }
+  .accent { color: var(--teal); }
+
+  /* Úvod */
+  .hero { text-align: center; padding: 8px 0 28px; }
+  .badge { position: relative; width: 104px; height: 104px; margin: 0 auto 26px; display: grid; place-items: center; }
+  .badge::before { content: ""; position: absolute; inset: 0; border-radius: 50%; border: 2px solid rgba(19,163,155,.22); animation: ring 3.2s ease-out infinite; }
+  .badge .core { width: 84px; height: 84px; border-radius: 50%; display: grid; place-items: center; color: #fff;
+    background: radial-gradient(circle at 30% 25%, #2fc1b5, #0d9089 70%); box-shadow: 0 14px 30px rgba(13,144,137,.32), inset 0 2px 0 rgba(255,255,255,.25); }
+  .badge svg { width: 38px; height: 38px; }
+  @keyframes ring { 0% { transform: scale(.9); opacity: 1; } 100% { transform: scale(1.25); opacity: 0; } }
+  .hero h1 { font-size: clamp(38px, 7vw, 64px); font-weight: 700; margin: 0; }
+  .hero .sub { font-size: clamp(17px, 2.4vw, 21px); color: var(--ink-2); margin: 14px 0 6px; }
+  .hero .meta { font-size: 14px; color: var(--ink-3); margin: 0; }
+  .toc { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 26px auto 0; padding: 0; list-style: none; }
+  .toc a { display: inline-block; padding: 7px 14px; border-radius: 999px; background: var(--card); border: 1px solid var(--line);
+    color: var(--ink-2); text-decoration: none; font-size: 14px; font-weight: 700; backdrop-filter: blur(6px); }
+  .toc a:hover { border-color: var(--teal); color: var(--teal-2); }
+
+  /* Karty a sekce */
+  .card { background: var(--card); border: 1px solid rgba(255,255,255,.9); border-radius: 22px; padding: 26px 28px;
+    box-shadow: 0 1px 2px rgba(20,49,58,.04), 0 12px 32px rgba(20,49,58,.07); backdrop-filter: blur(10px); }
+  section { margin-top: 22px; scroll-margin-top: 20px; }
+  .sec-title { display: flex; gap: 14px; align-items: center; margin: 44px 4px 14px; }
+  .sec-title .num { flex: none; width: 38px; height: 38px; border-radius: 12px; background: var(--teal-soft); color: var(--teal-2);
+    display: grid; place-items: center; font: 700 16px var(--head); }
+  .sec-title h2 { font-size: clamp(24px, 3.6vw, 32px); margin: 0; font-weight: 700; }
+  .card p:first-child, .card ul:first-child { margin-top: 0; }
+  .card p:last-child, .card ul:last-child { margin-bottom: 0; }
+  .notice { display: flex; gap: 16px; align-items: flex-start; border-left: 5px solid var(--teal); }
+  .notice .ic { flex: none; width: 40px; height: 40px; border-radius: 12px; background: var(--teal-soft); color: var(--teal-2); display: grid; place-items: center; }
+  .notice .ic svg { width: 22px; height: 22px; }
+  .notice p { margin: 0; }
+
+  /* Video */
+  .video .player { border-radius: 22px; overflow: hidden; background: #0e2b31; aspect-ratio: 16 / 9; box-shadow: 0 18px 44px rgba(20,49,58,.16); }
+  .video video { display: block; width: 100%; height: 100%; }
+  .video .vnote { color: var(--ink-3); font-size: 14px; margin: 12px 6px 0; }
+
+  /* Přehled v kartách (jako ve videu) */
+  .facts { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+  .fact { position: relative; display: flex; gap: 14px; align-items: flex-start; padding: 18px; border-radius: 18px; background: #fff;
+    box-shadow: 0 1px 2px rgba(20,49,58,.05), 0 8px 22px rgba(20,49,58,.06); }
+  .fact .ic { flex: none; width: 44px; height: 44px; border-radius: 13px; background: #eef5f3; color: var(--teal-2); display: grid; place-items: center; }
+  .fact .ic svg { width: 22px; height: 22px; }
+  .fact b { display: block; font: 700 17px/1.25 var(--head); color: var(--ink); }
+  .fact span { display: block; font-size: 14px; line-height: 1.4; color: var(--ink-2); margin-top: 3px; }
+  .fact .ok { position: absolute; top: -8px; right: -8px; width: 24px; height: 24px; border-radius: 50%; background: var(--ok); color: #fff;
+    display: grid; place-items: center; box-shadow: 0 2px 6px rgba(31,154,94,.35); }
+  .fact .ok svg { width: 14px; height: 14px; }
+  .fact.warn .ok { background: var(--amber); box-shadow: 0 2px 6px rgba(201,138,18,.35); }
+
+  /* Seznamy a tabulky */
+  .list { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+  .list li { position: relative; padding-left: 34px; }
+  .list li::before { content: ""; position: absolute; left: 0; top: 4px; width: 22px; height: 22px; border-radius: 50%; background: var(--teal-soft)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230c8a83' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 12.5l4 4 8-9'/%3E%3C/svg%3E") center / 14px no-repeat; }
+  .list.info li::before { background: #fbf1dc url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b07a0e' stroke-width='3' stroke-linecap='round'%3E%3Cpath d='M12 7v6M12 17h.01'/%3E%3C/svg%3E") center / 14px no-repeat; }
+  .tbl { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 15.5px; }
+  .tbl th { text-align: left; font: 700 13px var(--head); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); padding: 0 14px 10px; }
+  .tbl td { padding: 13px 14px; border-top: 1px solid var(--line); vertical-align: top; }
+  .tbl td:first-child { font-weight: 700; }
+  .tbl .pill { display: inline-block; white-space: nowrap; padding: 2px 10px; border-radius: 999px; background: var(--teal-soft); color: var(--teal-2); font-weight: 800; font-size: 14px; margin-right: 4px; }
+  .who { display: grid; gap: 4px; }
+  .who .name { font: 700 22px var(--head); }
+  code { background: var(--teal-soft); color: var(--teal-2); padding: 1px 7px; border-radius: 7px; font-size: .92em; }
+
+  /* Kroky */
+  .steps { list-style: none; padding: 0; margin: 0 0 18px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; counter-reset: s; }
+  .steps li { counter-increment: s; background: #fff; border-radius: 18px; padding: 16px 16px 18px; box-shadow: 0 1px 2px rgba(20,49,58,.05), 0 8px 22px rgba(20,49,58,.06); font-size: 15px; line-height: 1.45; color: var(--ink-2); }
+  .steps li::before { content: counter(s); display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: var(--teal); color: #fff; font: 700 15px var(--head); margin-bottom: 10px; }
+  .steps b { display: block; color: var(--ink); font: 700 17px/1.25 var(--head); margin-bottom: 4px; }
+  .rights { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; padding: 0; list-style: none; }
+  .rights li { padding: 8px 15px; border-radius: 999px; background: #fff; box-shadow: 0 4px 14px rgba(20,49,58,.07); font: 700 15px var(--head); color: var(--ink); }
+  .rights li::before { content: "✓"; color: var(--teal); margin-right: 7px; }
+  .status { display: flex; gap: 18px; align-items: center; }
+  .status .ring { flex: none; width: 74px; height: 74px; border-radius: 50%; display: grid; place-items: center; font: 700 15px var(--head); color: var(--teal-2);
+    background: conic-gradient(var(--teal) 0 75%, #e6efed 75% 100%); position: relative; }
+  .status .ring::after { content: ""; position: absolute; inset: 8px; border-radius: 50%; background: #fff; }
+  .status .ring span { position: relative; z-index: 1; font-size: 13px; text-align: center; line-height: 1.1; }
+  .status h3 { margin: 0 0 4px; font-size: 22px; }
+  .status p { margin: 0; color: var(--ink-2); }
+  .contact { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 16px; }
+  .contact a { display: flex; gap: 12px; align-items: center; padding: 14px 16px; border-radius: 16px; background: #fff; text-decoration: none; color: var(--ink);
+    box-shadow: 0 6px 18px rgba(20,49,58,.07); font-weight: 700; word-break: break-word; }
+  .contact a:hover { color: var(--teal-2); }
+  .contact .ic { flex: none; width: 38px; height: 38px; border-radius: 11px; background: var(--teal-soft); color: var(--teal-2); display: grid; place-items: center; }
+  .contact .ic svg { width: 20px; height: 20px; }
+  .contact small { display: block; font-weight: 600; color: var(--ink-3); font-size: 12px; }
+
+  footer { margin-top: 48px; text-align: center; color: var(--ink-3); font-size: 14px; }
+  footer nav { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  footer nav a { padding: 8px 16px; border-radius: 999px; background: var(--card); border: 1px solid var(--line); text-decoration: none; font-weight: 700; color: var(--ink-2); }
+
+  @media (max-width: 760px) {
+    body { font-size: 16px; }
+    main { padding: 36px 16px 56px; }
+    .facts, .steps { grid-template-columns: 1fr; }
+    .contact { grid-template-columns: 1fr; }
+    .card { padding: 20px; border-radius: 18px; }
+    .tbl thead { display: none; }
+    .tbl, .tbl tbody, .tbl tr, .tbl td { display: block; width: 100%; }
+    .tbl tr { padding: 12px 0; border-top: 1px solid var(--line); }
+    .tbl td { border: 0; padding: 2px 0; }
+    .tbl tr:first-child { border-top: 0; padding-top: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .bg span, .badge::before { animation: none; }
+  }
+  .steps.steps4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  @media (max-width: 900px) { .steps.steps4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 760px) { .steps.steps4 { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
-<main>
-  <h1>Prohlášení o přístupnosti</h1>
-  <p class="meta">AI nákupní asistent „Ema“ (chatovací okno) · posouzeno 11. 10. 2026</p>
+<a class="skip" href="#obsah">Přeskočit na obsah</a>
+<div class="bg" aria-hidden="true"><span class="b1"></span><span class="b2"></span><span class="b3"></span></div>
+<main id="obsah">
+  <header class="hero">
+    <div class="badge" aria-hidden="true"><div class="core"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="4.5" r="1.8"/><path d="M5 8.5l7 1.5 7-1.5M12 10v4.5M12 14.5l-3.5 6M12 14.5l3.5 6"/></svg></div></div>
+    <h1>Prohlášení o <span class="accent">přístupnosti</span></h1>
+    <p class="sub">Chat pro každého · AI nákupní asistent „Zoe“ (chatovací okno)</p>
+    <p class="meta">Posouzeno 11. 10. 2026</p>
+    <ul class="toc" aria-label="Obsah stránky">
+      <li><a href="#video">Jak chat funguje</a></li>
+      <li><a href="#stav">Stav souladu</a></li>
+      <li><a href="#zajisteno">Co je zajištěno</a></li>
+      <li><a href="#omezeni">Známá omezení</a></li>
+      <li><a href="#kontakt">Kontakt</a></li>
+    </ul>
+  </header>
 
-  <p>Provozovatel asistenta, Theodoros Tselidis, chce, aby chat mohl pohodlně používat každý, včetně lidí se zdravotním postižením. Usilujeme o soulad s mezinárodními pravidly přístupnosti WCAG 2.1 na úrovni AA (normy EN 301 549).</p>
-
-  <h2>Stav souladu</h2>
-  <p>Chat je s těmito pravidly <strong>částečně v souladu</strong>. Posouzení jsme udělali sami, nezávislý audit zatím neproběhl.</p>
-
-  <h2>Co je zajištěno</h2>
-  <ul>
-    <li>Chat lze celý ovládat klávesnicí (Tab, Enter, Esc) a zaměřený prvek je viditelně orámovaný.</li>
-    <li>Tlačítka a ovládací prvky mají textové popisky pro čtečky obrazovky. Nové odpovědi čtečky oznamují automaticky (oblast <em>aria-live</em>).</li>
-    <li>Text má dostatečný kontrast a chat funguje i při zvětšení písma nebo stránky.</li>
-    <li>Na mobilu se chat otevírá přes celou obrazovku a velikost písma v poli pro zprávu brání nechtěnému přiblížení.</li>
-    <li>Když máte v systému zapnuté omezení pohybu (prefers-reduced-motion), chat vypne animace.</li>
-    <li>U každého produktu je cena, dostupnost a odkaz uvedený textem, nejen obrázkem.</li>
-  </ul>
-
-  <h2>Známá omezení</h2>
-  <ul>
-    <li>Odpovědi vytváří umělá inteligence. Mohou být nepřesné nebo méně srozumitelné. Závazné údaje najdete vždy na stránce produktu.</li>
-    <li>Obrázky produktů v kartách nemají vlastní textový popis, protože název produktu je uveden hned vedle nich.</li>
-    <li>Výběr smajlíků je určený hlavně pro myš a dotyk. Psaní zpráv bez něj funguje plně.</li>
-    <li>Přístupnost samotného e-shopu Řecko nás baví nemáme pod kontrolou. Toto prohlášení se týká jen chatovacího okna.</li>
-  </ul>
-
-  <h2>Zpětná vazba a kontakt</h2>
-  <div class="box">
-    <p style="margin:0">Narazili jste na problém s přístupností nebo potřebujete informace v jiné podobě? Napište nám a do 30 dnů odpovíme.<br>
-    E-mail: <a href="mailto:nexonagencyeu@gmail.com">nexonagencyeu@gmail.com</a><br>
-    Telefon: <a href="tel:+420725332542">+420 725 332 542</a></p>
+  <div class="card notice" role="note">
+    <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 0 1-11.6 7.1L4 20l1-4.4A8 8 0 1 1 20 12z"/></svg></span>
+    <p>Provozovatel asistenta, Theodoros Tselidis, chce, aby chat mohl pohodlně používat každý, včetně lidí se zdravotním postižením. Usilujeme o soulad s mezinárodními pravidly přístupnosti WCAG 2.1 na úrovni AA (normy EN 301 549).</p>
   </div>
-  <p>Pokud nebudete s vyřízením spokojeni, můžete se obrátit na Českou obchodní inspekci (<a href="https://www.coi.gov.cz" rel="noopener">coi.gov.cz</a>).</p>
 
-  <p class="meta" style="margin-top:32px"><a href="chat-gdpr.html">Moje data a GDPR</a></p>
+  <section id="video" class="video" aria-labelledby="videoH">
+    <div class="sec-title"><span class="num" aria-hidden="true">▶</span><h2 id="videoH">Jak funguje <span class="accent">AI nákupní asistent</span></h2></div>
+    <div class="player">
+      <video controls playsinline preload="metadata" poster="videa/jak-funguje-chatbot.jpg" aria-describedby="videoDesc">
+        <source src="videa/jak-funguje-chatbot.mp4" type="video/mp4">
+        <source src="videa/jak-funguje-chatbot.webm" type="video/webm">
+        Váš prohlížeč video neumí přehrát. Obsah videa je popsaný níže.
+      </video>
+    </div>
+    <p class="vnote" id="videoDesc">20 sekund. Obsah videa je níže popsaný v krocích.</p>
+    <ol class="steps steps4" style="margin-top:16px">
+      <li><b>Otevřete chat</b>Tlačítko Chat je přímo na e-shopu.</li>
+      <li><b>Napíšete, co hledáte</b>Asistent vám doporučí produkty z e-shopu.</li>
+      <li><b>Cena i sklad z webu</b>U každého produktu vidíte cenu, dostupnost a čas ověření.</li>
+      <li><b>Zbytek vyřeší obchod</b>U objednávek a reklamací vás asistent odkáže na obchod.</li>
+    </ol>
+  </section>
+
+  <section id="stav" aria-labelledby="sStav">
+    <div class="sec-title"><span class="num" aria-hidden="true">1</span><h2 id="sStav">Stav souladu</h2></div>
+    <div class="card status">
+      <div class="ring" aria-hidden="true"><span>WCAG<br>2.1 AA</span></div>
+      <div><h3>Částečně v souladu</h3><p>Chat je s těmito pravidly <strong>částečně v souladu</strong>. Posouzení jsme udělali sami, nezávislý audit zatím neproběhl.</p></div>
+    </div>
+  </section>
+
+  <section id="zajisteno" aria-labelledby="sOk">
+    <div class="sec-title"><span class="num" aria-hidden="true">2</span><h2 id="sOk">Co je <span class="accent">zajištěno</span></h2></div>
+    <ul class="facts" role="list">
+      <li class="fact"><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2.5" y="6" width="19" height="12" rx="2.5"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M8 14h8"/></svg></span><div><b>Ovládání klávesnicí</b><span>Chat lze celý ovládat klávesnicí (Tab, Enter, Esc) a zaměřený prvek je viditelně orámovaný.</span></div><span class="ok" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span></li>
+      <li class="fact"><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5v5h3.5L12 18V6L7.5 9.5z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></svg></span><div><b>Čtečky obrazovky</b><span>Tlačítka a ovládací prvky mají textové popisky pro čtečky obrazovky. Nové odpovědi čtečky oznamují automaticky (oblast <em>aria-live</em>).</span></div><span class="ok" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span></li>
+      <li class="fact"><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg></span><div><b>Kontrast a zvětšení</b><span>Text má dostatečný kontrast a chat funguje i při zvětšení písma nebo stránky.</span></div><span class="ok" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span></li>
+      <li class="fact"><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="6.5" y="2.5" width="11" height="19" rx="2.5"/><path d="M11 18.5h2"/></svg></span><div><b>Mobil</b><span>Na mobilu se chat otevírá přes celou obrazovku a velikost písma v poli pro zprávu brání nechtěnému přiblížení.</span></div><span class="ok" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span></li>
+      <li class="fact"><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M10 9v6M14 9v6"/></svg></span><div><b>Omezení pohybu</b><span>Když máte v systému zapnuté omezení pohybu (prefers-reduced-motion), chat vypne animace.</span></div><span class="ok" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span></li>
+      <li class="fact"><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 6h14M5 10h14M5 14h9M5 18h6"/></svg></span><div><b>Vše i textem</b><span>U každého produktu je cena, dostupnost a odkaz uvedený textem, nejen obrázkem.</span></div><span class="ok" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span></li>
+    </ul>
+  </section>
+
+  <section id="omezeni" aria-labelledby="sLim">
+    <div class="sec-title"><span class="num" aria-hidden="true">3</span><h2 id="sLim">Známá omezení</h2></div>
+    <div class="card">
+      <ul class="list info">
+        <li>Odpovědi vytváří umělá inteligence. Mohou být nepřesné nebo méně srozumitelné. Závazné údaje najdete vždy na stránce produktu.</li>
+        <li>Obrázky produktů v kartách nemají vlastní textový popis, protože název produktu je uveden hned vedle nich.</li>
+        <li>Výběr smajlíků je určený hlavně pro myš a dotyk. Psaní zpráv bez něj funguje plně.</li>
+        <li>Přístupnost samotného e-shopu Řecko nás baví nemáme pod kontrolou. Toto prohlášení se týká jen chatovacího okna.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="kontakt" aria-labelledby="sKontakt">
+    <div class="sec-title"><span class="num" aria-hidden="true">4</span><h2 id="sKontakt">Zpětná vazba a kontakt</h2></div>
+    <div class="card">
+      <p>Narazili jste na problém s přístupností nebo potřebujete informace v jiné podobě? Napište nám a do 30 dnů odpovíme.</p>
+      <div class="contact">
+        <a href="mailto:nexonagencyeu@gmail.com"><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M4 7l8 6 8-6"/></svg></span><span><small>E-mail</small>nexonagencyeu@gmail.com</span></a>
+        <a href="tel:+420725332542"><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg></span><span><small>Telefon</small>+420 725 332 542</span></a>
+      </div>
+      <p style="margin-top:18px">Pokud nebudete s vyřízením spokojeni, můžete se obrátit na Českou obchodní inspekci (<a href="https://www.coi.gov.cz" rel="noopener">coi.gov.cz</a>).</p>
+    </div>
+  </section>
+
+  <footer>
+    <nav aria-label="Další stránky"><a href="chat-gdpr.html">Moje data a GDPR</a><a href="#obsah">Nahoru ↑</a></nav>
+    AI nákupní asistent · provozuje Theodoros Tselidis
+  </footer>
 </main>
 </body>
 </html>
