@@ -404,12 +404,12 @@
     // Využití podle modelu + katalog
     const cat = s.catalog, sync = cat.last_sync;
     parts.push(el("div", { class: "grid" },
-      el("section", { class: "panel" }, el("h2", {}, "Využití podle modelu"),
+      el("section", { class: "panel" }, el("h2", {}, "Využití podle modelu a služby"),
         s.usage_by_model.length ? el("div", { class: "tablewrap" }, el("table", {},
-          el("thead", {}, el("tr", {}, el("th", {}, "Model"), el("th", { class: "num" }, "Volání"), el("th", { class: "num" }, "Vstup"), el("th", { class: "num" }, "Výstup"), el("th", { class: "num" }, "Cache"), el("th", { class: "num" }, "Náklady"), el("th", { class: "num" }, "Chyby"))),
+          el("thead", {}, el("tr", {}, el("th", {}, "Model"), el("th", { class: "num" }, "Volání"), el("th", { class: "num" }, "Vstup"), el("th", { class: "num" }, "Výstup"), el("th", { class: "num" }, "Cache"), el("th", { class: "num" }, "Embed."), el("th", { class: "num" }, "Náklady"), el("th", { class: "num" }, "Chyby"))),
           el("tbody", {}, s.usage_by_model.map((u) => el("tr", {},
             el("td", { class: "mono" }, u.model), el("td", { class: "num" }, fmtInt.format(u.calls)), el("td", { class: "num" }, tok(u.input_tokens)),
-            el("td", { class: "num" }, tok(u.output_tokens)), el("td", { class: "num" }, tok(u.cache_read_tokens)), el("td", { class: "num" }, usd(u.cost_usd)),
+            el("td", { class: "num" }, tok(u.output_tokens)), el("td", { class: "num" }, tok(u.cache_read_tokens)), el("td", { class: "num" }, tok(u.embedding_tokens)), el("td", { class: "num" }, usd(u.cost_usd)),
             el("td", { class: "num" }, String(u.errors))))))) : el("div", { class: "empty" }, "Za toto období žádná volání.")),
       el("section", { class: "panel" }, el("h2", {}, "Katalog"),
         el("div", { class: "kv" },
