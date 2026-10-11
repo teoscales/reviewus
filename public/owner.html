@@ -904,9 +904,7 @@
     const vcRows = [];
     if (!vc.configured) {
       vcRows.push(el("div", { class: "hint2" },
-        el("div", { style: "margin-bottom:6px" }, "Pro načtení skutečného využití přidej token Vercelu (ve Vercelu: Account Settings → Tokens, omez ho na svůj tým a dej mu platnost třeba 90 dní). Pak přidej do souboru .env dva řádky a spusť npm run deploy:"),
-        el("code", {}, "VERCEL_TOKEN=…  a  VERCEL_TEAM_ID=team_…"),
-        el("div", { style: "margin-top:6px" }, "Token se nikdy nedostane do prohlížeče – čte ho jen server.")));
+        "Na tarifu Hobby Vercel využití přes API neposkytuje, proto tu jsou jen limity. Aktuální čísla najdeš ve Vercelu (odkaz „Využití ve Vercelu“ níže). Po přechodu na Vercel Pro stačí do .env přidat VERCEL_TOKEN a VERCEL_TEAM_ID a čísla se ukážou tady."));
       vcRows.push(...d.limits.vercel.map((l) => limRow(l.label, el("span", {}, "limit ", el("b", {}, fmtQty(l.limit, l.unit === "count" ? "" : l.unit === "hours" ? "h" : "GB"))), null)));
     } else if (!vc.ok && vc.unsupported) {
       vcRows.push(el("div", { class: "hint2" }, vc.error, " Token tu teď není potřeba – můžeš ho ve Vercelu smazat a řádky VERCEL_TOKEN a VERCEL_TEAM_ID z .env odebrat."));
