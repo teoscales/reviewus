@@ -908,6 +908,9 @@
         el("code", {}, "VERCEL_TOKEN=…  a  VERCEL_TEAM_ID=team_…"),
         el("div", { style: "margin-top:6px" }, "Token se nikdy nedostane do prohlížeče – čte ho jen server.")));
       vcRows.push(...d.limits.vercel.map((l) => limRow(l.label, el("span", {}, "limit ", el("b", {}, fmtQty(l.limit, l.unit === "count" ? "" : l.unit === "hours" ? "h" : "GB"))), null)));
+    } else if (!vc.ok && vc.unsupported) {
+      vcRows.push(el("div", { class: "hint2" }, vc.error, " Token tu teď není potřeba – můžeš ho ve Vercelu smazat a řádky VERCEL_TOKEN a VERCEL_TEAM_ID z .env odebrat."));
+      vcRows.push(...d.limits.vercel.map((l) => limRow(l.label, el("span", {}, "limit ", el("b", {}, fmtQty(l.limit, l.unit === "count" ? "" : l.unit === "hours" ? "h" : "GB"))), null)));
     } else if (!vc.ok) {
       vcRows.push(el("div", { class: "errbox" }, vc.error));
     } else {
