@@ -1,0 +1,551 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Provozovatel · Chatboti</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+  :root {
+    --bg: #0c0e11; --panel: #14171c; --panel-2: #1a1e25; --line: #252a33; --line-2: #313844;
+    --ink: #eceef1; --ink-2: #a3acb9; --ink-3: #6f7886;
+    --lime: #c8f25a; --lime-ink: #10140a; --amber: #ffb648; --red: #ff6b6b; --red-soft: #3a1d20; --cyan: #5cd3f0;
+    --radius: 12px;
+    --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+    --sans: "Space Grotesk", system-ui, "Segoe UI", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { color-scheme: dark; }
+  body { margin: 0; font: 15px/1.5 var(--sans); background: var(--bg); color: var(--ink); }
+  body::before { content: ""; position: fixed; inset: 0; pointer-events: none; opacity: .5;
+    background-image: linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size: 48px 48px; mask-image: radial-gradient(ellipse at top, #000 0%, transparent 70%); }
+  button, input, textarea { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  a { color: var(--cyan); }
+  .hidden { display: none !important; }
+  .wrap { position: relative; max-width: 1240px; margin: 0 auto; padding: 22px 16px 64px; }
+  .mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+  .muted { color: var(--ink-3); }
+
+  .field { width: 100%; padding: 10px 12px; background: var(--panel-2); border: 1px solid var(--line-2); border-radius: 10px; }
+  .field:focus, textarea:focus { outline: 2px solid var(--lime); outline-offset: 1px; border-color: transparent; }
+  label { display: block; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); margin: 0 0 6px; }
+  .btn { border: 1px solid var(--line-2); background: var(--panel-2); border-radius: 10px; padding: 8px 14px; font-weight: 600; }
+  .btn:hover { border-color: var(--ink-3); }
+  .btn.primary { background: var(--lime); color: var(--lime-ink); border-color: var(--lime); }
+  .btn.primary:hover { filter: brightness(1.05); }
+  .btn.danger { color: var(--red); border-color: #5a2a2e; }
+  .btn:focus-visible, .card:focus-visible, .seg button:focus-visible { outline: 2px solid var(--lime); outline-offset: 2px; }
+
+  /* Přihlášení */
+  .login { position: relative; min-height: 100vh; display: grid; place-items: center; padding: 16px; }
+  .login form { width: 100%; max-width: 380px; background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 28px; }
+  .login .eyebrow { font-family: var(--mono); font-size: 12px; color: var(--lime); letter-spacing: .12em; }
+  .login h1 { margin: 6px 0 18px; font-size: 26px; }
+  .login .btn { width: 100%; margin-top: 14px; padding: 11px; }
+  .err { color: var(--red); font-size: 14px; min-height: 1.3em; margin-top: 10px; }
+
+  /* Hlavička */
+  .top { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .logo { width: 36px; height: 36px; border-radius: 10px; background: var(--lime); color: var(--lime-ink); display: grid; place-items: center; font-weight: 700; }
+  .brand h1 { margin: 0; font-size: 22px; letter-spacing: -.01em; }
+  .brand .sub { font-family: var(--mono); font-size: 12px; color: var(--ink-3); }
+  .tools { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .seg { display: inline-flex; border: 1px solid var(--line-2); border-radius: 10px; padding: 3px; background: var(--panel); }
+  .seg button { border: 0; background: none; padding: 5px 11px; border-radius: 7px; color: var(--ink-2); font-family: var(--mono); font-size: 13px; }
+  .seg button[aria-pressed="true"] { background: var(--lime); color: var(--lime-ink); font-weight: 600; }
+
+  /* Ukazatele */
+  .stats { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; margin-bottom: 22px; }
+  .stat { background: var(--panel); padding: 14px 16px; min-width: 0; }
+  .stat .k { font-size: 12px; color: var(--ink-3); letter-spacing: .04em; }
+  .stat .v { font-family: var(--mono); font-size: 26px; font-weight: 600; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .stat .s { font-size: 12px; color: var(--ink-3); }
+  .stat.alert .v { color: var(--amber); }
+
+  h2 { font-size: 15px; margin: 0 0 12px; letter-spacing: .02em; }
+  .section-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 0 0 12px; }
+  .section-head h2 { margin: 0; }
+
+  /* Karty firem */
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 14px; }
+  .card { text-align: left; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px; display: grid; gap: 12px; transition: border-color .15s; }
+  .card:hover { border-color: var(--line-2); }
+  .card .hd { display: flex; gap: 10px; align-items: center; }
+  .av { width: 38px; height: 38px; border-radius: 50%; background: var(--panel-2); border: 1px solid var(--line-2); display: grid; place-items: center; font-weight: 700; overflow: hidden; flex: none; }
+  .av img { width: 100%; height: 100%; object-fit: cover; }
+  .card .name { font-weight: 600; font-size: 17px; line-height: 1.2; }
+  .card .url { font-family: var(--mono); font-size: 12px; color: var(--ink-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pill { display: inline-flex; gap: 6px; align-items: center; font-family: var(--mono); font-size: 11px; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--line-2); color: var(--ink-2); white-space: nowrap; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ink-3); }
+  .pill.ok .dot { background: var(--lime); box-shadow: 0 0 8px var(--lime); }
+  .pill.warn { color: var(--amber); border-color: #5a4320; } .pill.warn .dot { background: var(--amber); }
+  .pill.err { color: var(--red); border-color: #5a2a2e; } .pill.err .dot { background: var(--red); }
+  .kv { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+  .kv div { min-width: 0; }
+  .kv .k { font-size: 11px; color: var(--ink-3); letter-spacing: .04em; }
+  .kv .v { font-family: var(--mono); font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .meter { height: 6px; background: var(--panel-2); border-radius: 999px; overflow: hidden; }
+  .meter i { display: block; height: 100%; background: var(--lime); border-radius: 999px; }
+  .meter.warn i { background: var(--amber); } .meter.over i { background: var(--red); }
+  .meterlbl { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 12px; color: var(--ink-2); margin-bottom: 5px; }
+  .spark { width: 100%; height: 38px; display: block; }
+  .card .foot { display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--ink-3); }
+  .badge-bad { font-family: var(--mono); font-size: 12px; color: var(--red); background: var(--red-soft); padding: 2px 8px; border-radius: 999px; }
+  .card.add { place-items: center; min-height: 200px; border-style: dashed; color: var(--ink-2); font-weight: 600; }
+
+  /* Detail */
+  .back { border: 0; background: none; color: var(--ink-2); padding: 0; margin-bottom: 14px; font-family: var(--mono); font-size: 13px; }
+  .back:hover { color: var(--ink); }
+  .dhead { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; justify-content: space-between; margin-bottom: 18px; }
+  .dhead .who { display: flex; gap: 14px; align-items: center; min-width: 0; }
+  .dhead .av { width: 52px; height: 52px; font-size: 20px; }
+  .dhead h2 { font-size: 26px; margin: 0; letter-spacing: -.01em; }
+  .grid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 14px; margin-bottom: 14px; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px; min-width: 0; }
+  .chart { position: relative; }
+  .chart svg { display: block; width: 100%; height: 200px; overflow: visible; }
+  .tip { position: absolute; pointer-events: none; transform: translate(-50%, -115%); background: var(--ink); color: var(--bg); font-family: var(--mono); font-size: 12px; padding: 5px 8px; border-radius: 6px; white-space: nowrap; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; font-weight: 500; font-size: 11px; letter-spacing: .05em; text-transform: uppercase; color: var(--ink-3); padding: 6px 8px; border-bottom: 1px solid var(--line); }
+  td { padding: 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  td.num, th.num { text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; }
+  .tablewrap { overflow-x: auto; }
+  .keyok { color: var(--lime); font-family: var(--mono); font-size: 12px; white-space: nowrap; }
+  .keyoff { color: var(--ink-3); font-family: var(--mono); font-size: 12px; white-space: nowrap; }
+  .fb { border: 1px solid var(--line); border-radius: 12px; padding: 12px; display: grid; gap: 8px; margin-bottom: 10px; background: var(--panel-2); }
+  .fb .q { color: var(--ink-2); font-size: 14px; }
+  .fb .a { border-left: 3px solid var(--red); padding: 2px 0 2px 10px; white-space: pre-wrap; }
+  .fb.resolved .a { border-left-color: var(--lime); opacity: .75; }
+  .fb .n { font-size: 13px; color: var(--amber); }
+  .fb .meta { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; font-family: var(--mono); font-size: 11px; color: var(--ink-3); }
+  .fb textarea { width: 100%; min-height: 48px; background: var(--panel); border: 1px solid var(--line-2); border-radius: 8px; padding: 8px 10px; font-size: 13px; resize: vertical; }
+  .fb .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .notes textarea { width: 100%; min-height: 160px; background: var(--panel-2); border: 1px solid var(--line-2); border-radius: 10px; padding: 10px 12px; resize: vertical; line-height: 1.5; }
+  .saved { font-family: var(--mono); font-size: 12px; color: var(--ink-3); }
+  .empty { color: var(--ink-3); font-size: 14px; padding: 6px 0; }
+  .errbox { border: 1px solid #5a2a2e; background: var(--red-soft); color: #ffc9c9; border-radius: 12px; padding: 12px 14px; margin-bottom: 14px; font-size: 14px; }
+
+  /* Formulář firmy */
+  .modal { position: fixed; inset: 0; background: rgba(5,6,8,.7); display: grid; place-items: center; z-index: 10; padding: 16px; }
+  .modal form { width: 100%; max-width: 520px; background: var(--panel); border: 1px solid var(--line-2); border-radius: 16px; padding: 22px; display: grid; gap: 14px; }
+  .modal h2 { font-size: 20px; margin: 0; }
+  .hint { font-size: 12px; color: var(--ink-3); margin-top: 4px; }
+  .actions { display: flex; gap: 8px; justify-content: space-between; flex-wrap: wrap; }
+
+  @media (max-width: 1100px) { .stats { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+  @media (max-width: 560px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } .cards { grid-template-columns: 1fr; } .stat .v { font-size: 22px; } }
+</style>
+</head>
+<body>
+
+<section class="login" id="login">
+  <form id="loginForm" autocomplete="off">
+    <div class="eyebrow">// PROVOZOVATEL</div>
+    <h1>Panel chatbotů</h1>
+    <label for="tok">Token</label>
+    <input class="field mono" id="tok" type="password" required minlength="20" autocomplete="current-password">
+    <button class="btn primary" type="submit">Vstoupit</button>
+    <div class="err" id="loginErr" role="alert"></div>
+  </form>
+</section>
+
+<div class="wrap hidden" id="app">
+  <div class="top">
+    <div class="brand"><div class="logo" aria-hidden="true">AI</div><div><h1>Chatboti</h1><div class="sub" id="updated">—</div></div></div>
+    <div class="tools">
+      <div class="seg" role="group" aria-label="Období">
+        <button type="button" data-days="7">7d</button>
+        <button type="button" data-days="30" aria-pressed="true">30d</button>
+        <button type="button" data-days="90">90d</button>
+      </div>
+      <button class="btn" type="button" id="refresh">Obnovit</button>
+      <button class="btn" type="button" id="logout">Odhlásit</button>
+    </div>
+  </div>
+
+  <!-- Přehled firem -->
+  <div id="vList">
+    <div class="stats" id="stats"></div>
+    <div class="section-head"><h2>Firmy</h2><button class="btn" type="button" id="addCo">+ Přidat firmu</button></div>
+    <div class="cards" id="cards"></div>
+  </div>
+
+  <!-- Detail firmy -->
+  <div id="vDetail" class="hidden">
+    <button class="back" type="button" id="back">← Všechny firmy</button>
+    <div id="detail"></div>
+  </div>
+</div>
+
+<div class="modal hidden" id="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+  <form id="coForm" autocomplete="off">
+    <h2 id="mTitle">Firma</h2>
+    <div><label for="cName">Název</label><input class="field" id="cName" maxlength="80" required></div>
+    <div><label for="cUrl">Web e-shopu</label><input class="field mono" id="cUrl" placeholder="https://…"></div>
+    <div>
+      <label for="cEp">Admin endpoint nasazení</label>
+      <input class="field mono" id="cEp" placeholder="https://xxxx.supabase.co/functions/v1/admin">
+      <div class="hint">Prázdné = chatbot běží na tomto serveru. U jiného nasazení musí mít stejný OWNER_TOKEN a v ADMIN_ORIGINS tento web.</div>
+    </div>
+    <div class="err" id="cErr" role="alert"></div>
+    <div class="actions">
+      <button class="btn danger" type="button" id="cDel">Odebrat firmu</button>
+      <span><button class="btn" type="button" id="cCancel">Zrušit</button> <button class="btn primary" type="submit">Uložit</button></span>
+    </div>
+  </form>
+</div>
+
+<script>
+(() => {
+  const API = "https://qyrwygjgxyjyywzgvwzo.supabase.co/functions/v1/owner";
+  const KEY = "owner:tok";
+  const $ = (id) => document.getElementById(id);
+  const fmtInt = new Intl.NumberFormat("cs-CZ");
+  const usd = (v) => "$" + Number(v || 0).toFixed(v >= 100 ? 0 : v >= 1 ? 2 : 4);
+  const fmtDT = new Intl.DateTimeFormat("cs-CZ", { timeZone: "Europe/Prague", day: "numeric", month: "numeric", hour: "2-digit", minute: "2-digit" });
+  const fmtDay = new Intl.DateTimeFormat("cs-CZ", { day: "numeric", month: "numeric" });
+  const tok = (n) => n >= 1e6 ? (n / 1e6).toFixed(1).replace(".", ",") + " M" : n >= 1e3 ? Math.round(n / 1e3) + " k" : String(n);
+  const ago = (iso) => {
+    if (!iso) return "nikdy";
+    const m = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
+    return m < 1 ? "právě teď" : m < 60 ? `před ${m} min` : m < 1440 ? `před ${Math.round(m / 60)} h` : `před ${Math.round(m / 1440)} d`;
+  };
+
+  let token = "";
+  try { token = sessionStorage.getItem(KEY) || ""; } catch {}
+  const state = { days: 30, data: null, companyId: null, showResolved: false };
+
+  function el(tag, attrs = {}, ...kids) {
+    const e = document.createElement(tag);
+    for (const [k, v] of Object.entries(attrs)) {
+      if (v === null || v === undefined || v === false) continue;
+      if (k === "class") e.className = v; else if (k.startsWith("on")) e.addEventListener(k.slice(2), v); else e.setAttribute(k, v);
+    }
+    for (const k of kids.flat()) if (k !== null && k !== undefined && k !== false) e.append(k);
+    return e;
+  }
+
+  async function api(body) {
+    const res = await fetch(API, { method: "POST", headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token }, body: JSON.stringify(body) });
+    let data = {};
+    try { data = await res.json(); } catch {}
+    if (res.status === 401) { logout("Špatný token."); throw new Error("unauthorized"); }
+    if (!res.ok) throw new Error(data.message || data.error || ("HTTP " + res.status));
+    return data;
+  }
+
+  // --- přihlášení -----------------------------------------------------------
+  $("loginForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    token = $("tok").value.trim();
+    $("loginErr").textContent = "";
+    try {
+      const d = await api({ action: "overview", days: state.days });
+      try { sessionStorage.setItem(KEY, token); } catch {}
+      $("tok").value = "";
+      $("login").classList.add("hidden"); $("app").classList.remove("hidden");
+      state.data = d; renderList();
+    } catch (err) { if (err.message !== "unauthorized") $("loginErr").textContent = "Nepodařilo se: " + err.message; }
+  });
+  function logout(msg) {
+    token = ""; try { sessionStorage.removeItem(KEY); } catch {}
+    $("app").classList.add("hidden"); $("login").classList.remove("hidden");
+    $("loginErr").textContent = msg || ""; $("tok").focus();
+  }
+  $("logout").addEventListener("click", () => logout());
+
+  document.querySelectorAll("[data-days]").forEach((b) => b.addEventListener("click", () => {
+    state.days = Number(b.dataset.days);
+    document.querySelectorAll("[data-days]").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+    reload();
+  }));
+  $("refresh").addEventListener("click", reload);
+  async function reload() { if (state.companyId) await openCompany(state.companyId); else await loadList(); }
+
+  // --- přehled ---------------------------------------------------------------
+  async function loadList() {
+    try { state.data = await api({ action: "overview", days: state.days }); renderList(); }
+    catch (err) { if (err.message !== "unauthorized") $("cards").replaceChildren(el("div", { class: "errbox" }, "Přehled se nepodařilo načíst: " + err.message)); }
+  }
+
+  function stat(k, v, s, alert) { return el("div", { class: "stat" + (alert ? " alert" : "") }, el("div", { class: "k" }, k), el("div", { class: "v" }, v), el("div", { class: "s" }, s)); }
+
+  function avatar(name, url) {
+    const a = el("div", { class: "av" });
+    if (url) a.append(el("img", { src: url, alt: "" })); else a.textContent = (name || "?").trim().slice(0, 1).toUpperCase();
+    return a;
+  }
+
+  function status(row) {
+    if (row.error) return el("span", { class: "pill err" }, el("i", { class: "dot" }), "nedostupné");
+    if (!row.summary.enabled) return el("span", { class: "pill warn" }, el("i", { class: "dot" }), "vypnutý");
+    return el("span", { class: "pill ok" }, el("i", { class: "dot" }), "běží");
+  }
+
+  function meter(spent, budget) {
+    const pct = budget > 0 ? Math.min(100, (spent / budget) * 100) : 0;
+    const cls = pct >= 100 ? " over" : pct >= 80 ? " warn" : "";
+    return el("div", {},
+      el("div", { class: "meterlbl" }, el("span", {}, "měsíc " + usd(spent)), el("span", {}, "rozpočet " + usd(budget))),
+      el("div", { class: "meter" + cls, role: "meter", "aria-valuenow": String(Math.round(pct)), "aria-valuemin": "0", "aria-valuemax": "100", "aria-label": "Čerpání měsíčního rozpočtu" }, el("i", { style: `width:${pct.toFixed(1)}%` })));
+  }
+
+  function spark(daily) {
+    const ns = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(ns, "svg");
+    svg.setAttribute("class", "spark"); svg.setAttribute("viewBox", "0 0 300 38"); svg.setAttribute("preserveAspectRatio", "none");
+    svg.setAttribute("aria-hidden", "true");
+    const vals = daily.map((d) => d.cost_usd || 0);
+    const max = Math.max(...vals, 0.0001);
+    const w = 300 / Math.max(vals.length, 1);
+    vals.forEach((v, i) => {
+      const h = Math.max(v > 0 ? 2 : 0, (v / max) * 34);
+      const r = document.createElementNS(ns, "rect");
+      r.setAttribute("x", String(i * w + 1)); r.setAttribute("width", String(Math.max(1, w - 2)));
+      r.setAttribute("y", String(38 - h)); r.setAttribute("height", String(h)); r.setAttribute("rx", "1.5");
+      r.setAttribute("fill", "#c8f25a"); r.setAttribute("opacity", "0.85");
+      svg.append(r);
+    });
+    return svg;
+  }
+
+  function renderList() {
+    const d = state.data;
+    $("updated").textContent = "// " + fmtDT.format(new Date()) + " · období " + d.days + " dní";
+    const t = d.totals;
+    $("stats").replaceChildren(
+      stat("Firmy", `${t.companies}`, `${t.reachable} dostupných`, t.reachable < t.companies),
+      stat("Náklady tento měsíc", usd(t.month_cost_usd), "všechny firmy"),
+      stat(`Náklady ${d.days} dní`, usd(t.period_cost_usd), "AI + embeddingy"),
+      stat("Konverzace", fmtInt.format(t.chats), `za ${d.days} dní`),
+      stat("Špatné odpovědi", fmtInt.format(t.open_bad), "neřešené", t.open_bad > 0),
+      stat("API klíče v provozu", fmtInt.format(t.keys_in_use), "napříč nasazeními"),
+    );
+    const cards = d.companies.map((row) => {
+      const c = row.company, s = row.summary;
+      const card = el("button", { type: "button", class: "card", onclick: () => openCompany(c.id) },
+        el("div", { class: "hd" }, avatar(s ? (s.name || c.name) : c.name, s && s.avatar_url),
+          el("div", { style: "min-width:0;flex:1" }, el("div", { class: "name" }, c.name), el("div", { class: "url" }, c.shop_url || (c.endpoint ? "vzdálené nasazení" : "tento server"))),
+          status(row)),
+      );
+      if (!s) { card.append(el("div", { class: "errbox", style: "margin:0" }, row.error)); return card; }
+      card.append(
+        el("div", { class: "kv" },
+          el("div", {}, el("div", { class: "k" }, "konverzace"), el("div", { class: "v" }, fmtInt.format(s.totals.chats))),
+          el("div", {}, el("div", { class: "k" }, "náklady " + d.days + "d"), el("div", { class: "v" }, usd(s.totals.cost_usd))),
+          el("div", {}, el("div", { class: "k" }, "klíče"), el("div", { class: "v" }, `${s.keys_in_use} v provozu`))),
+        spark(s.daily),
+        meter(s.budget.month_cost_usd, s.budget.monthly_usd),
+        el("div", { class: "foot" },
+          el("span", { class: "mono" }, `${s.model || "—"} · ${s.name ? "„" + s.name + "“" : "Ema"}`),
+          s.feedback.open_bad ? el("span", { class: "badge-bad" }, `${s.feedback.open_bad} špatně`) : el("span", { class: "mono" }, "✓ bez chyb")),
+      );
+      return card;
+    });
+    cards.push(el("button", { type: "button", class: "card add", onclick: () => openForm(null) }, "+ Přidat firmu"));
+    $("cards").replaceChildren(...cards);
+  }
+
+  // --- detail -----------------------------------------------------------------
+  $("back").addEventListener("click", () => { state.companyId = null; $("vDetail").classList.add("hidden"); $("vList").classList.remove("hidden"); loadList(); });
+
+  async function openCompany(id) {
+    state.companyId = id;
+    $("vList").classList.add("hidden"); $("vDetail").classList.remove("hidden");
+    $("detail").replaceChildren(el("div", { class: "empty" }, "Načítám…"));
+    try { renderDetail(await api({ action: "company", id, days: state.days })); }
+    catch (err) { if (err.message !== "unauthorized") $("detail").replaceChildren(el("div", { class: "errbox" }, "Nepodařilo se načíst: " + err.message)); }
+  }
+
+  function renderDetail(r) {
+    const c = r.company, s = r.summary;
+    $("updated").textContent = "// " + fmtDT.format(new Date()) + " · " + c.name;
+    const head = el("div", { class: "dhead" },
+      el("div", { class: "who" }, avatar(s ? (s.name || c.name) : c.name, s && s.avatar_url),
+        el("div", {}, el("h2", {}, c.name), el("div", { class: "muted mono", style: "font-size:12px" },
+          c.shop_url ? el("a", { href: c.shop_url, target: "_blank", rel: "noopener" }, c.shop_url) : "bez webu",
+          " · ", c.endpoint ? "vzdálené nasazení" : "tento server"))),
+      el("div", { class: "tools" }, status(r.summary ? { summary: s } : { error: r.error }), el("button", { class: "btn", type: "button", onclick: () => openForm(c) }, "Upravit")));
+    const parts = [head];
+    if (!s) {
+      parts.push(el("div", { class: "errbox" }, r.error), notesPanel(c));
+      $("detail").replaceChildren(...parts);
+      return;
+    }
+    const t = s.totals;
+    const pct = s.budget.pct;
+    parts.push(el("div", { class: "stats" },
+      stat(`Náklady ${s.period_days} dní`, usd(t.cost_usd), `${usd(t.cost_per_chat_usd)} / konverzace`),
+      stat("Tento měsíc", usd(s.budget.month_cost_usd), pct === null ? "bez rozpočtu" : `${pct} % z ${usd(s.budget.monthly_usd)}`, pct !== null && pct >= 80),
+      stat("Konverzace", fmtInt.format(t.chats), `${fmtInt.format(t.turns)} dotazů`),
+      stat("Na podporu", fmtInt.format(t.contacts), t.chats ? Math.round((t.contacts / t.chats) * 100) + " % konverzací" : "—"),
+      stat("Chyby AI", fmtInt.format(t.errors), `${fmtInt.format(t.fallbacks)}× záložní hledání`, t.errors > 0),
+      stat("Poslední volání", ago(t.last_call), s.model || "—"),
+    ));
+
+    // Graf nákladů + klíče
+    parts.push(el("div", { class: "grid" },
+      el("section", { class: "panel" }, el("h2", {}, "Náklady za den (USD)"), costChart(s.daily, s.period_days)),
+      el("section", { class: "panel" }, el("h2", {}, `API klíče · ${s.keys_in_use} v provozu`),
+        el("div", { class: "tablewrap" }, el("table", {},
+          el("thead", {}, el("tr", {}, el("th", {}, "Služba"), el("th", {}, "Účel"), el("th", {}, "Stav"))),
+          el("tbody", {}, s.keys.map((k) => el("tr", {},
+            el("td", {}, el("div", {}, k.provider), el("div", { class: "mono muted", style: "font-size:11px" }, k.masked || k.name)),
+            el("td", {}, k.purpose),
+            el("td", {}, k.in_use ? el("span", { class: "keyok" }, "● v provozu") : k.configured ? el("span", { class: "keyoff" }, "○ nastaven, nepoužit") : el("span", { class: "keyoff" }, "○ nenastaven")))))))),
+    ));
+
+    // Využití podle modelu + katalog
+    const cat = s.catalog, sync = cat.last_sync;
+    parts.push(el("div", { class: "grid" },
+      el("section", { class: "panel" }, el("h2", {}, "Využití podle modelu"),
+        s.usage_by_model.length ? el("div", { class: "tablewrap" }, el("table", {},
+          el("thead", {}, el("tr", {}, el("th", {}, "Model"), el("th", { class: "num" }, "Volání"), el("th", { class: "num" }, "Vstup"), el("th", { class: "num" }, "Výstup"), el("th", { class: "num" }, "Cache"), el("th", { class: "num" }, "Náklady"), el("th", { class: "num" }, "Chyby"))),
+          el("tbody", {}, s.usage_by_model.map((u) => el("tr", {},
+            el("td", { class: "mono" }, u.model), el("td", { class: "num" }, fmtInt.format(u.calls)), el("td", { class: "num" }, tok(u.input_tokens)),
+            el("td", { class: "num" }, tok(u.output_tokens)), el("td", { class: "num" }, tok(u.cache_read_tokens)), el("td", { class: "num" }, usd(u.cost_usd)),
+            el("td", { class: "num" }, String(u.errors))))))) : el("div", { class: "empty" }, "Za toto období žádná volání.")),
+      el("section", { class: "panel" }, el("h2", {}, "Katalog"),
+        el("div", { class: "kv" },
+          el("div", {}, el("div", { class: "k" }, "produkty"), el("div", { class: "v" }, fmtInt.format(cat.visible))),
+          el("div", {}, el("div", { class: "k" }, "skryté"), el("div", { class: "v" }, fmtInt.format(Math.max(0, cat.products - cat.visible)))),
+          el("div", {}, el("div", { class: "k" }, "synchronizace"), el("div", { class: "v" }, sync ? ago(sync.finished_at || sync.started_at) : "nikdy"))),
+        sync && sync.status === "error" ? el("div", { class: "errbox", style: "margin:12px 0 0" }, "Poslední synchronizace selhala: " + (sync.error || "")) : null,
+        sync && sync.status === "ok" ? el("p", { class: "muted", style: "font-size:13px;margin:12px 0 0" }, `Poslední běh v pořádku, ${fmtInt.format(sync.total || 0)} produktů.`) : null),
+    ));
+
+    // Chybné odpovědi + poznámky
+    parts.push(el("div", { class: "grid" }, feedbackPanel(c, s), notesPanel(c)));
+    $("detail").replaceChildren(...parts);
+  }
+
+  function costChart(daily, days) {
+    const box = el("div", { class: "chart" });
+    const map = new Map(daily.map((d) => [String(d.day).slice(0, 10), d]));
+    const rows = [];
+    const today = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Prague" }));
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date(today); d.setDate(today.getDate() - i);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+      rows.push(map.get(key) || { day: key, cost_usd: 0, chats: 0 });
+    }
+    requestAnimationFrame(() => draw());
+    function draw() {
+      const W = Math.max(280, box.clientWidth || 600), H = 200, L = 52, R = 6, T = 10, B = 24;
+      const max = Math.max(...rows.map((r) => r.cost_usd), 0.0001);
+      const y = (v) => T + (H - T - B) * (1 - v / max);
+      const slot = (W - L - R) / rows.length;
+      const bw = Math.max(1.5, Math.min(16, slot - 3));
+      const ns = "http://www.w3.org/2000/svg";
+      const svg = document.createElementNS(ns, "svg");
+      svg.setAttribute("viewBox", `0 0 ${W} ${H}`); svg.setAttribute("role", "img");
+      svg.setAttribute("aria-label", "Sloupcový graf nákladů po dnech v USD");
+      const add = (tag, a) => { const n = document.createElementNS(ns, tag); for (const k in a) n.setAttribute(k, a[k]); svg.append(n); return n; };
+      for (const v of [0, max / 2, max]) {
+        add("line", { x1: L, x2: W - R, y1: y(v), y2: y(v), stroke: "#252a33" });
+        const t = add("text", { x: L - 6, y: y(v) + 4, "text-anchor": "end", "font-size": 11, fill: "#6f7886", "font-family": "JetBrains Mono, monospace" }); t.textContent = usd(v);
+      }
+      const every = Math.ceil(rows.length / Math.max(3, Math.floor(W / 70)));
+      const tip = el("div", { class: "tip hidden" });
+      rows.forEach((r, i) => {
+        const x = L + slot * i + (slot - bw) / 2;
+        if (r.cost_usd > 0) {
+          const h = Math.max(2, y(0) - y(r.cost_usd)), rr = Math.min(3, bw / 2), top = y(0) - h;
+          add("path", { d: `M${x},${y(0)} V${top + rr} Q${x},${top} ${x + rr},${top} H${x + bw - rr} Q${x + bw},${top} ${x + bw},${top + rr} V${y(0)} Z`, fill: "#c8f25a" });
+        }
+        if (i % every === 0) { const t = add("text", { x: L + slot * i + slot / 2, y: H - 6, "text-anchor": "middle", "font-size": 11, fill: "#6f7886" }); t.textContent = fmtDay.format(new Date(r.day + "T12:00:00")); }
+        const hit = add("rect", { x: L + slot * i, y: T, width: slot, height: H - T - B, fill: "transparent" });
+        hit.addEventListener("mouseenter", () => {
+          tip.textContent = `${fmtDay.format(new Date(r.day + "T12:00:00"))} · ${usd(r.cost_usd)} · ${r.chats || 0} konverzací`;
+          tip.style.left = (L + slot * i + slot / 2) + "px"; tip.style.top = y(r.cost_usd) + "px"; tip.classList.remove("hidden");
+        });
+        hit.addEventListener("mouseleave", () => tip.classList.add("hidden"));
+      });
+      add("line", { x1: L, x2: W - R, y1: y(0), y2: y(0), stroke: "#313844" });
+      box.replaceChildren(svg, tip);
+    }
+    return box;
+  }
+
+  function feedbackPanel(c, s) {
+    const items = state.showResolved ? s.feedback.recent.filter((f) => f.verdict === "bad") : s.feedback.open_bad_items;
+    const head = el("div", { class: "section-head" }, el("h2", {}, `Co chatbot udělal špatně · ${s.feedback.open_bad} neřešených`),
+      el("div", { class: "seg" },
+        el("button", { type: "button", "aria-pressed": String(!state.showResolved), onclick: () => { state.showResolved = false; openCompany(c.id); } }, "neřešené"),
+        el("button", { type: "button", "aria-pressed": String(state.showResolved), onclick: () => { state.showResolved = true; openCompany(c.id); } }, "vše")));
+    const list = items.length ? items.map((f) => {
+      const note = el("textarea", { placeholder: "Tvoje poznámka (co jsi upravil, proč…)", maxlength: "2000", "aria-label": "Poznámka provozovatele" });
+      note.value = f.owner_note || "";
+      const saved = el("span", { class: "saved", role: "status" });
+      const update = async (patch, msg) => {
+        try { await api({ action: "feedback_update", company_id: c.id, feedback_id: f.id, ...patch }); saved.textContent = msg; if ("resolved" in patch) setTimeout(() => openCompany(c.id), 400); }
+        catch (err) { if (err.message !== "unauthorized") saved.textContent = "chyba: " + err.message; }
+      };
+      return el("div", { class: "fb" + (f.resolved ? " resolved" : "") },
+        el("div", { class: "meta" }, fmtDT.format(new Date(f.created_at)), f.resolved ? el("span", { class: "keyok" }, "● vyřešeno") : el("span", { style: "color:var(--red)" }, "● neřešeno")),
+        f.user_text ? el("div", { class: "q" }, "Zákazník: " + f.user_text) : null,
+        el("div", { class: "a" }, f.bot_text),
+        f.note ? el("div", { class: "n" }, "Firma: " + f.note) : null,
+        note,
+        el("div", { class: "row" },
+          el("button", { class: "btn", type: "button", onclick: () => update({ owner_note: note.value }, "poznámka uložena") }, "Uložit poznámku"),
+          el("button", { class: "btn primary", type: "button", onclick: () => update({ resolved: !f.resolved, owner_note: note.value }, f.resolved ? "znovu otevřeno" : "vyřešeno") }, f.resolved ? "Otevřít znovu" : "Označit vyřešené"),
+          saved));
+    }) : [el("div", { class: "empty" }, state.showResolved ? "Zatím nic označeného." : "Žádné neřešené chyby. 👌")];
+    return el("section", { class: "panel" }, head, ...list);
+  }
+
+  function notesPanel(c) {
+    const ta = el("textarea", { placeholder: "Poznámky k firmě: smlouva, cena, kontakt, co jsme domluvili, co zlepšit…", maxlength: "10000", "aria-label": "Poznámky k firmě" });
+    ta.value = c.notes || "";
+    const saved = el("span", { class: "saved", role: "status" }, c.updated_at ? "naposledy " + ago(c.updated_at) : "");
+    let timer;
+    const save = async () => {
+      try { await api({ action: "notes_save", id: c.id, notes: ta.value }); saved.textContent = "uloženo " + new Date().toLocaleTimeString("cs-CZ", { hour: "2-digit", minute: "2-digit" }); }
+      catch (err) { if (err.message !== "unauthorized") saved.textContent = "chyba: " + err.message; }
+    };
+    ta.addEventListener("input", () => { clearTimeout(timer); saved.textContent = "…"; timer = setTimeout(save, 900); });
+    return el("section", { class: "panel notes" }, el("div", { class: "section-head" }, el("h2", {}, "Poznámky"), saved), ta);
+  }
+
+  // --- formulář firmy ------------------------------------------------------------
+  let editing = null, delArmed = false;
+  function openForm(c) {
+    editing = c; delArmed = false;
+    $("mTitle").textContent = c ? "Upravit firmu" : "Nová firma";
+    $("cName").value = c ? c.name : ""; $("cUrl").value = c && c.shop_url ? c.shop_url : ""; $("cEp").value = c && c.endpoint ? c.endpoint : "";
+    $("cDel").classList.toggle("hidden", !c); $("cDel").textContent = "Odebrat firmu"; $("cErr").textContent = "";
+    $("modal").classList.remove("hidden"); $("cName").focus();
+  }
+  function closeForm() { $("modal").classList.add("hidden"); }
+  $("cCancel").addEventListener("click", closeForm);
+  $("modal").addEventListener("click", (e) => { if (e.target === $("modal")) closeForm(); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("modal").classList.contains("hidden")) closeForm(); });
+  $("coForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    try {
+      const r = await api({ action: "company_save", id: editing ? editing.id : undefined, name: $("cName").value, shop_url: $("cUrl").value, endpoint: $("cEp").value });
+      closeForm();
+      if (editing) openCompany(r.company.id); else loadList();
+    } catch (err) { if (err.message !== "unauthorized") $("cErr").textContent = err.message; }
+  });
+  $("cDel").addEventListener("click", async () => {
+    if (!editing) return;
+    if (!delArmed) { delArmed = true; $("cDel").textContent = "Opravdu? Klikni znovu"; return; }
+    try {
+      await api({ action: "company_delete", id: editing.id });
+      closeForm(); state.companyId = null; $("vDetail").classList.add("hidden"); $("vList").classList.remove("hidden"); loadList();
+    } catch (err) { if (err.message !== "unauthorized") $("cErr").textContent = err.message; }
+  });
+
+  if (token) { $("login").classList.add("hidden"); $("app").classList.remove("hidden"); loadList(); } else $("tok").focus();
+})();
+</script>
+</body>
+</html>
